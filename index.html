@@ -37,7 +37,7 @@
         }
     </style>
 </head>
-<body class="p-4 md:p-8 text-pink-900 flex flex-col min-h-screen">
+<body class="p-4 md:p-8 text-pink-900 flex flex-col min-h-screen relative">
 
     <div class="max-w-3xl mx-auto w-full flex-grow">
         <!-- Fejléc -->
@@ -85,6 +85,23 @@
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8" id="shop-items">
             <!-- Ide tölti be a JS a kártyákat -->
+        </div>
+    </div>
+
+    <!-- SZÉP EGYEDI MEGERŐSÍTŐ ABLAK (MODAL) -->
+    <div id="custom-modal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border-4 border-pink-200 text-center transform scale-95 transition-all">
+            <div class="text-4xl mb-2">🎁</div>
+            <h3 class="font-pacifico text-2xl text-pink-600 mb-2">Biztosan megveszed?</h3>
+            <p id="modal-text" class="text-sm text-pink-800 font-medium mb-6 px-2"></p>
+            <div class="flex gap-3 justify-center">
+                <button onclick="closeModal()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-2.5 px-4 rounded-xl text-xs transition cursor-pointer">
+                    Mégse ❌
+                </button>
+                <button id="modal-confirm-btn" class="flex-1 bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs shadow transition cursor-pointer">
+                    Igen, kérem! 💕
+                </button>
+            </div>
         </div>
     </div>
 
@@ -148,7 +165,7 @@
                         </div>
                         <div class="flex items-center justify-between mt-auto pt-3 border-t border-pink-100">
                             <span class="font-extrabold text-pink-500 text-sm">${item.price} ⭐</span>
-                            <button onclick="buyItem(${item.price}, '${item.title}')" 
+                            <button onclick="openConfirmModal(${item.price}, '${item.title}')" 
                                 class="bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500 text-white font-bold py-2 px-4 rounded-xl text-xs shadow transition transform active:scale-95 cursor-pointer">
                                 Megveszem 💕
                             </button>
@@ -212,6 +229,67 @@
             }
         }
 
+        // Szép Modális Ablak Kezelése
+        function openConfirmModal(price, title) {
+            if (currentStars < price) {
+                alert(`Jaj, még nincs elég csillagod ehhez! 😢\nSzükséges: ${price} ⭐ | Jelenlegi: ${currentStars} ⭐`);
+                return;
+            }
+
+            const modal = document.getElementById('custom-modal');
+            const modalText = document.getElementById('modal-text');
+            const confirmBtn = document.getElementById('modal-confirm-btn');
+
+            modalText.innerHTML = `Meg szeretnéd venni a következőt: <br><strong class="text-pink-600">${title}</strong>?<br>Ár: <span class="text-pink-600 font-bold">${price} ⭐</span>`;
+            modal.classList.remove('hidden');
+
+            // Gomb esemény beállítása
+            confirmBtn.onclick = function() {
+                closeModal();
+                executePurchase(price, title);
+            };
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('custom-modal');
+            modal.classList.add('hidden');
+        }
+
+        // --- 5. VÁSÁRLÁS LOGIKA ---
+        async function executePurchase(price, title) {
+            if (!supabaseClient) {
+                alert("Hiba: Nincs kapcsolat az adatbázissal!");
+                return;
+            }
+
+            await loadStars();
+
+            if (currentStars < price) {
+                alert("Nincs elég csillagod!");
+                return;
+            }
+
+            const newTotal = currentStars - price;
+            
+            const { error: updateError } = await supabaseClient
+                .from('user_stars')
+                .update({ stars: newTotal })
+                .eq('id', 1);
+
+            const { error: historyError } = await supabaseClient
+                .from('purchases')
+                .insert([{ title: title, price: price }]);
+
+            if (updateError || historyError) {
+                alert("Hiba történt a vásárlás során!");
+            } else {
+                currentStars = newTotal;
+                document.getElementById('star-count').innerText = currentStars;
+                loadHistory();
+                alert(`Sikeres vásárlás! 🎉\nKiváltva: ${title}\nJó szórakozást! 🥰`);
+            }
+        }
+
         // Valós idejű figyelés
         if (supabaseClient) {
             supabaseClient.channel('custom-all-channel')
@@ -225,43 +303,6 @@
                     loadHistory();
                 })
                 .subscribe();
-        }
-
-        // --- 5. VÁSÁRLÁS LOGIKA ---
-        async function buyItem(price, title) {
-            if (!supabaseClient) {
-                alert("Hiba: Nincs kapcsolat az adatbázissal!");
-                return;
-            }
-
-            await loadStars();
-
-            if (currentStars < price) {
-                alert(`Jaj, még nincs elég csillagod ehhez! 😢\nSzükséges: ${price} ⭐ | Jelenlegi: ${currentStars} ⭐`);
-                return;
-            }
-
-            if (confirm(`Biztosan meg szeretnéd venni ezt: "${title}" ${price} csillagért? 💕`)) {
-                const newTotal = currentStars - price;
-                
-                const { error: updateError } = await supabaseClient
-                    .from('user_stars')
-                    .update({ stars: newTotal })
-                    .eq('id', 1);
-
-                const { error: historyError } = await supabaseClient
-                    .from('purchases')
-                    .insert([{ title: title, price: price }]);
-
-                if (updateError || historyError) {
-                    alert("Hiba történt a vásárlás során!");
-                } else {
-                    currentStars = newTotal;
-                    document.getElementById('star-count').innerText = currentStars;
-                    loadHistory();
-                    alert(`Sikeres vásárlás! 🎉\nKiváltva: ${title}\nJó szórakozást! 🥰`);
-                }
-            }
         }
 
         // --- 6. ADMIN PANEL LOGIKA ---
