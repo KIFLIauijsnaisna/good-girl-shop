@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Good Girl Csillagbolt </title>
+    <!-- Tailwind CSS a gyönyörű formázásokhoz -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Google Fonts: Poppins & Pacifico (Szerelmes, csajos betűtípusok) -->
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #ffe6ea 0%, #ffc3d0 100%);
+            min-height: 100vh;
+        }
+        .font-pacifico {
+            font-family: 'Pacifico', cursive;
+        }
+        /* Lebegő szívecskék animációja */
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); opacity: 1; }
+            50% { transform: translateY(-15px) rotate(5deg); }
+            100% { transform: translateY(0px) rotate(0deg); opacity: 1; }
+        }
+        .floating-heart {
+            animation: float 4s ease-in-out infinite;
+        }
+        /* Kártya lebegés effektus */
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(255, 105, 180, 0.3);
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 text-pink-900">
+
+    <div class="max-w-3xl mx-auto">
+        <!-- Fejléc / Cím -->
+        <header class="text-center my-6 relative">
+            <span class="text-4xl floating-heart inline-block">💖</span>
+            <h1 class="text-4xl md:text-5xl font-pacifico text-pink-600 drop-shadow-md my-2">
+                Good Girl Csillagbolt
+            </h1>
+            <p class="text-pink-500 font-medium italic">Gyűjts csillagokat és váltsd be őket édes meglepetésekre! ✨</p>
+        </header>
+
+        <!-- Csillag Egyenleg Kártya -->
+        <div class="bg-white/80 backdrop-blur-md rounded-3xl p-6 mb-8 text-center shadow-xl border-4 border-pink-200 relative overflow-hidden">
+            <div class="absolute -top-4 -right-4 text-6xl opacity-20">🌸</div>
+            <div class="absolute -bottom-4 -left-4 text-6xl opacity-20">💖</div>
+            
+            <h2 class="text-lg font-semibold text-pink-400 uppercase tracking-wider mb-1">Aktuális Egyenleged</h2>
+            <div class="flex items-center justify-center gap-3 my-2">
+                <span class="text-5xl md:text-6xl font-extrabold text-pink-600 drop-shadow" id="star-count">...</span>
+                <span class="text-4xl md:text-5xl animate-bounce">⭐</span>
+            </div>
+            <p class="text-sm text-pink-400">Mindig ügyes vagy, büszke vagyok rád! 💕</p>
+        </div>
+
+        <!-- Bolt Jutalmak Listája -->
+        <h2 class="text-2xl font-pacifico text-pink-600 mb-4 text-center">Választható Jutalmak 🎁</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="shop-items">
+            <!-- Jutalmakat JS segítségével töltjük fel, vagy alább statikusan -->
+        </div>
+
+        <!-- Rejtett Admin Felület (Gomb a láblécben) -->
+        <footer class="mt-12 text-center border-t border-pink-200 pt-6">
+            <button onclick="toggleAdmin()" class="text-xs text-pink-300 hover:text-pink-500 underline transition">
+                🔒 Csillag Adás (Szerelmednek)
+            </button>
+            
+            <!-- Admin Panel -->
+            <div id="admin-panel" class="hidden mt-4 p-6 bg-pink-100/90 rounded-2xl shadow-inner border border-pink-300">
+                <h3 class="font-bold text-pink-700 mb-2">⭐ Csillagok Jóváírása (Admin)</h3>
+                <div class="flex justify-center gap-2 max-w-xs mx-auto">
+                    <input type="password" id="admin-pass" placeholder="Jelszó" class="p-2 rounded-lg text-sm border border-pink-300 focus:outline-none w-24">
+                    <input type="number" id="add-amount" value="1" min="1" class="p-2 rounded-lg text-sm border border-pink-300 focus:outline-none w-16 text-center">
+                    <button onclick="addStars()" class="bg-pink-500 hover:bg-pink-600 text-white font-bold px-4 py-2 rounded-lg text-sm transition">
+                        + Csillag
+                    </button>
+                </div>
+                <p id="admin-msg" class="text-xs mt-2 text-pink-600 font-semibold"></p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // --- 1. SUPABASE BEÁLLÍTÁSOK ---
+        // Cseréld ki ezeket a Supabase-ből kimásolt adataidra!
+        const SUPABASE_URL = "https://hwllaxxhexuoyxzildqv.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3bGxheHhoZXh1b3l4emlsZHF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIwODc3MzUsImV4cCI6MjEwNzY2MzczNX0.Ek0TcWIbP2-J3SROEacpiktTGXAb7oOQn_d39sZTDB8";
+        const ADMIN_PASSWORD = "1234"; // Ide írd be a jelszavadat, amivel csillagokat adhatsz neki!
+
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // --- 2. JUTALMAK LISTÁJA (Itt tudod módosítani a tárgyakat és árakat) ---
+        const items = [
+            { id: 1, title: "10 Perc Hátmasszázs", price: 3, icon: "💆‍♀️", desc: "Egy pihentető masszázs a fárasztó nap után." },
+            { id: 2, title: "Kedvenc Finomság / Süti", price: 5, icon: "🧁", desc: "Bármilyen édesség vagy nassolni való, amit megkívánsz." },
+            { id: 3, title: "Moziest & Popcorn", price: 8, icon: "🍿", desc: "Te választod ki a filmet, én hozom a popcornt!" },
+            { id: 4, title: "Királylány Nap (Nem mosogatsz)", price: 10, icon: "👑", desc: "Ezen a napon minden házimunkát én csinálok helyetted." },
+            { id: 5, title: "Romantikus Vacsora Randi", price: 15, icon: "🍝", desc: "Elviszlek a kedvenc éttermedbe vagy főzök neked finomat." },
+            { id: 6, title: "Kívánság Jolly Joker", price: 20, icon: "✨", desc: "Bármit kérhetsz tőlem, amit csak szeretnél!" }
+        ];
+
+        let currentStars = 0;
+
+        // --- 3. ADATOK BETÖLTÉSE ---
+        async function loadStars() {
+            let { data, error } = await supabase.from('user_stars').select('stars').eq('id', 1).single();
+            if (data) {
+                currentStars = data.stars;
+                document.getElementById('star-count').innerText = currentStars;
+            }
+        }
+
+        // Valós idejű frissítés figyelése (ha te adsz csillagot, nála is egyből megjelenik)
+        supabase.channel('custom-all-channel')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'user_stars' }, (payload) => {
+                if (payload.new && payload.new.stars !== undefined) {
+                    currentStars = payload.new.stars;
+                    document.getElementById('star-count').innerText = currentStars;
+                }
+            })
+            .subscribe();
+
+        // --- 4. BOLT DÍSZTÉSE ÉS KIRAKÁSA ---
+        function renderShop() {
+            const container = document.getElementById('shop-items');
+            container.innerHTML = '';
+
+            items.forEach(item => {
+                container.innerHTML += `
+                    <div class="bg-white/90 rounded-2xl p-5 shadow-lg border-2 border-pink-100 card-hover flex flex-col justify-between">
+                        <div>
+                            <div class="text-4xl mb-2 text-center">${item.icon}</div>
+                            <h3 class="font-bold text-lg text-pink-700 text-center">${item.title}</h3>
+                            <p class="text-xs text-pink-400 text-center mt-1 mb-4">${item.desc}</p>
+                        </div>
+                        <div class="flex items-center justify-between mt-2 pt-3 border-t border-pink-100">
+                            <span class="font-extrabold text-pink-500 text-sm">${item.price} ⭐</span>
+                            <button onclick="buyItem(${item.price}, '${item.title}')" 
+                                class="bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500 text-white font-bold py-2 px-4 rounded-xl text-xs shadow-md transition transform active:scale-95">
+                                Megveszem 💕
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // --- 5. VÁSÁRLÁS LOGIKA ---
+        async function buyItem(price, title) {
+            if (currentStars < price) {
+                alert(`Jaj, még nincs elég csillagod ehhez! 😢\nSzükséges: ${price} ⭐ | Jelenlegi: ${currentStars} ⭐`);
+                return;
+            }
+
+            if (confirm(`Biztosan meg szeretnéd venni ezt: "${title}" ${price} csillagért? 💕`)) {
+                const newTotal = currentStars - price;
+                
+                const { error } = await supabase.from('user_stars').update({ stars: newTotal }).eq('id', 1);
+
+                if (error) {
+                    alert("Hiba történt a vásárlás során!");
+                } else {
+                    alert(`Sikeres vásárlás! 🎉\nKiváltva: ${title}\nJó szórakozást! 🥰`);
+                }
+            }
+        }
+
+        // --- 6. ADMIN CSÍLLAG ADÁS LOGIKA ---
+        function toggleAdmin() {
+            const panel = document.getElementById('admin-panel');
+            panel.classList.toggle('hidden');
+        }
+
+        async function addStars() {
+            const pass = document.getElementById('admin-pass').value;
+            const amount = parseInt(document.getElementById('add-amount').value);
+            const msg = document.getElementById('admin-msg');
+
+            if (pass !== ADMIN_PASSWORD) {
+                msg.innerText = "Hibás jelszó! ❌";
+                msg.className = "text-xs mt-2 text-red-500 font-semibold";
+                return;
+            }
+
+            const newTotal = currentStars + amount;
+            const { error } = await supabase.from('user_stars').update({ stars: newTotal }).eq('id', 1);
+
+            if (!error) {
+                msg.innerText = `Sikeresen hozzáadva +${amount} csillag! ✨`;
+                msg.className = "text-xs mt-2 text-green-600 font-semibold";
+                document.getElementById('admin-pass').value = '';
+            } else {
+                msg.innerText = "Hiba történt a frissítéskor.";
+            }
+        }
+
+        // Indítás
+        loadStars();
+        renderShop();
+    </script>
+</body>
+</html>
