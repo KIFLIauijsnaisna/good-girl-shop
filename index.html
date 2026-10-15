@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Canvas Confetti (Konfetti animációhoz) -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     
@@ -16,16 +18,51 @@
             font-family: 'Poppins', sans-serif;
             background: linear-gradient(135deg, #ffe6ea 0%, #ffc3d0 100%);
             min-height: 100vh;
+            overflow-x: hidden;
         }
         .font-pacifico {
             font-family: 'Pacifico', cursive;
         }
+        
+        /* Animált lebegő szívecskék a háttérben */
+        .bg-hearts-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .floating-bg-heart {
+            position: absolute;
+            bottom: -50px;
+            font-size: 1.5rem;
+            opacity: 0.4;
+            animation: floatUp 8s linear infinite;
+        }
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) rotate(0deg) scale(0.8);
+                opacity: 0.4;
+            }
+            50% {
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(-110vh) rotate(360deg) scale(1.2);
+                opacity: 0;
+            }
+        }
+
+        /* Kártya lebegés hatás */
         @keyframes float {
             0% { transform: translateY(0px) rotate(0deg); opacity: 1; }
             50% { transform: translateY(-12px) rotate(4deg); }
             100% { transform: translateY(0px) rotate(0deg); opacity: 1; }
         }
-        .floating-heart {
+        .floating-heart-header {
             animation: float 4s ease-in-out infinite;
         }
         .card-hover {
@@ -39,10 +76,13 @@
 </head>
 <body class="p-4 md:p-8 text-pink-900 flex flex-col min-h-screen relative">
 
-    <div class="max-w-3xl mx-auto w-full flex-grow">
+    <!-- Animált háttér szívecskék container -->
+    <div id="bg-hearts" class="bg-hearts-container"></div>
+
+    <div class="max-w-3xl mx-auto w-full flex-grow relative z-10">
         <!-- Fejléc -->
         <header class="text-center my-6 relative">
-            <span class="text-4xl floating-heart inline-block">💖</span>
+            <span class="text-4xl floating-heart-header inline-block">💖</span>
             <h1 class="text-4xl md:text-5xl font-pacifico text-pink-600 drop-shadow-sm my-2">
                 Good Girl Csillagbolt
             </h1>
@@ -52,7 +92,7 @@
         <!-- Egyenleg Kártya és Jobb Fenti Előzmények Gomb -->
         <div class="relative mb-8">
             <!-- Előzmények Gomb Jobb Fent -->
-            <div class="absolute -top-3 right-2 z-10">
+            <div class="absolute -top-3 right-2 z-20">
                 <button onclick="toggleHistory()" id="history-btn" class="bg-white/90 hover:bg-white text-pink-600 font-bold py-2 px-4 rounded-xl shadow-md border-2 border-pink-200 text-xs transition transform active:scale-95 flex items-center gap-1.5 cursor-pointer">
                     <span>📜</span> <span class="hidden sm:inline">Előzmények</span>
                 </button>
@@ -68,7 +108,14 @@
                     <span class="text-5xl md:text-6xl font-extrabold text-pink-600 drop-shadow" id="star-count">0</span>
                     <span class="text-4xl md:text-5xl animate-bounce select-none">⭐</span>
                 </div>
-                <p class="text-xs md:text-sm text-pink-400 font-medium">Mindig ügyes vagy, büszke vagyok rád! 💕</p>
+                
+                <!-- Napi Bók / Szerelmes Üzenet Doboz -->
+                <div class="mt-4 pt-3 border-t border-pink-100">
+                    <p class="text-xs uppercase tracking-widest text-pink-400 font-bold mb-1">💌 A mai nap bóka neked:</p>
+                    <p class="text-xs md:text-sm text-pink-600 font-medium italic" id="daily-compliment">
+                        "Betöltés..."
+                    </p>
+                </div>
             </div>
         </div>
 
@@ -118,7 +165,7 @@
     </div>
 
     <!-- Rejtett Admin Felület (Láblécben) -->
-    <footer class="mt-12 text-center border-t border-pink-200/60 pt-6 pb-4">
+    <footer class="mt-12 text-center border-t border-pink-200/60 pt-6 pb-4 relative z-10">
         <button onclick="toggleAdmin()" class="text-xs text-pink-400 hover:text-pink-600 underline transition font-medium">
             🔒 Csillag Adás (Szerelmednek)
         </button>
@@ -150,7 +197,55 @@
             console.error("Supabase hiba:", e);
         }
 
-        // --- 2. JUTALMAK LISTÁJA ---
+        // --- 2. NAPI BÓKOK LISTÁJA (Napi sorsoláshoz) ---
+        const compliments = [
+            "Te vagy a legédesebb lány a világon! 💕",
+            "Mindig büszke vagyok rád, ügyes vagy! ✨",
+            "Mára is jár neked egy óriási puszika! 💋",
+            "A mosolyod még a csillagoknál is fényesebb! ⭐",
+            "Nagyon szerencsés vagyok, hogy veled lehetek! 🥰",
+            "Köszönöm, hogy vagy nekem, kincsem! 💖",
+            "Ma is elképesztően gyönyörű vagy! 🌸",
+            "Egy igazi Good Girl vagy, jár a kényeztetés! 👑",
+            "Olyan jó illatod van és olyan cuki vagy! 🥰",
+            "Imádom, amikor így mosolyogsz rám! ☀️",
+            "Te vagy a napfényem a legborúsabb napokon is! 🌈",
+            "Ma is olyan büszkévé tettél, hercegnőm! 👑",
+            "Veled minden perc tiszta öröm és boldogság! 💓",
+            "A legszebb dolog, ami valaha történt velem, az tiéd! ✨",
+            "Ma is extra sok ölelés jár neked! 🤗"
+        ];
+
+        // Napi bók kiválasztása a dátum alapján (hogy egész nap ugyanaz legyen, de holnap más)
+        function setDailyCompliment() {
+            const today = new Date();
+            // Létrehozunk egy számot a napból (pl. 20261015)
+            const dateNumber = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+            
+            // Kiszámoljuk ebből a indexet
+            const index = dateNumber % compliments.length;
+            document.getElementById('daily-compliment').innerText = `"${compliments[index]}"`;
+        }
+
+        // --- 3. ANIMÁLT HÁTTÉR SZÍVECSKÉK ---
+        function createBgHearts() {
+            const container = document.getElementById('bg-hearts');
+            const heartIcons = ['💖', '🌸', '💕', '✨', '💗', '🎀'];
+            const numberOfHearts = 15;
+
+            for (let i = 0; i < numberOfHearts; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'floating-bg-heart';
+                heart.innerText = heartIcons[Math.floor(Math.random() * heartIcons.length)];
+                heart.style.left = Math.random() * 100 + 'vw';
+                heart.style.animationDuration = (Math.random() * 5 + 6) + 's';
+                heart.style.animationDelay = (Math.random() * 5) + 's';
+                heart.style.fontSize = (Math.random() * 1 + 1) + 'rem';
+                container.appendChild(heart);
+            }
+        }
+
+        // --- 4. JUTALMAK LISTÁJA ---
         const items = [
             { id: 1, title: "10 Perc Hátmasszázs", price: 3, icon: "💆‍♀️", desc: "Egy pihentető masszázs a fárasztó nap után." },
             { id: 2, title: "Kedvenc Finomság / Süti", price: 5, icon: "🧁", desc: "Bármilyen édesség vagy nassolni való, amit megkívánsz." },
@@ -162,7 +257,7 @@
 
         let currentStars = 0;
 
-        // --- 3. BOLT KIRAKÁSA ---
+        // --- 5. BOLT KIRAKÁSA ---
         function renderShop() {
             const container = document.getElementById('shop-items');
             container.innerHTML = '';
@@ -187,7 +282,7 @@
             });
         }
 
-        // --- 4. ADATOK ÉS ELŐZMÉNYEK BETÖLTÉSE ---
+        // --- 6. ADATOK ÉS ELŐZMÉNYEK BETÖLTÉSE ---
         async function loadStars() {
             if (!supabaseClient) return;
             try {
@@ -261,6 +356,15 @@
         }
 
         function openSuccessModal(title) {
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 80,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#ff69b4', '#ff1493', '#ffc0cb', '#ffd700']
+                });
+            }
+
             const modal = document.getElementById('success-modal');
             const modalText = document.getElementById('success-modal-text');
 
@@ -272,7 +376,7 @@
             document.getElementById(id).classList.add('hidden');
         }
 
-        // --- 5. VÁSÁRLÁS LOGIKA ---
+        // --- 7. VÁSÁRLÁS LOGIKA ---
         async function executePurchase(price, title) {
             if (!supabaseClient) {
                 alert("Hiba: Nincs kapcsolat az adatbázissal!");
@@ -303,7 +407,7 @@
                 currentStars = newTotal;
                 document.getElementById('star-count').innerText = currentStars;
                 loadHistory();
-                openSuccessModal(title); // Szép felugró ablak a sikeres vásárláshoz!
+                openSuccessModal(title);
             }
         }
 
@@ -322,7 +426,7 @@
                 .subscribe();
         }
 
-        // --- 6. ADMIN PANEL LOGIKA ---
+        // --- 8. ADMIN PANEL LOGIKA ---
         function toggleAdmin() {
             const panel = document.getElementById('admin-panel');
             panel.classList.toggle('hidden');
@@ -370,6 +474,8 @@
         // Indításkor betöltés
         renderShop();
         loadStars();
+        setDailyCompliment();
+        createBgHearts();
     </script>
 </body>
 </html>
