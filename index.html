@@ -88,20 +88,32 @@
         </div>
     </div>
 
-    <!-- SZÉP EGYEDI MEGERŐSÍTŐ ABLAK (MODAL) -->
+    <!-- 1. MEGERŐSÍTŐ ABLAK (KÉRÉS) -->
     <div id="custom-modal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
         <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border-4 border-pink-200 text-center transform scale-95 transition-all">
             <div class="text-4xl mb-2">🎁</div>
             <h3 class="font-pacifico text-2xl text-pink-600 mb-2">Biztosan megveszed?</h3>
             <p id="modal-text" class="text-sm text-pink-800 font-medium mb-6 px-2"></p>
             <div class="flex gap-3 justify-center">
-                <button onclick="closeModal()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-2.5 px-4 rounded-xl text-xs transition cursor-pointer">
+                <button onclick="closeModal('custom-modal')" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-2.5 px-4 rounded-xl text-xs transition cursor-pointer">
                     Mégse ❌
                 </button>
                 <button id="modal-confirm-btn" class="flex-1 bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs shadow transition cursor-pointer">
                     Igen, kérem! 💕
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- 2. SIKERES VÁSÁRLÁS ABLAK (EREDMÉNY) -->
+    <div id="success-modal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border-4 border-pink-300 text-center transform scale-95 transition-all">
+            <div class="text-5xl mb-2 animate-bounce">🎉</div>
+            <h3 class="font-pacifico text-2xl text-pink-600 mb-2">Sikeres Vásárlás!</h3>
+            <p id="success-modal-text" class="text-sm text-pink-800 font-medium mb-6 px-2"></p>
+            <button onclick="closeModal('success-modal')" class="w-full bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs shadow transition cursor-pointer">
+                Szuper, alig várom! 🥰
+            </button>
         </div>
     </div>
 
@@ -220,7 +232,6 @@
             }
         }
 
-        // Előzmény doboz lenyitása / bezárása
         function toggleHistory() {
             const box = document.getElementById('history-box');
             box.classList.toggle('hidden');
@@ -229,7 +240,7 @@
             }
         }
 
-        // Szép Modális Ablak Kezelése
+        // Modális ablakok kezelése
         function openConfirmModal(price, title) {
             if (currentStars < price) {
                 alert(`Jaj, még nincs elég csillagod ehhez! 😢\nSzükséges: ${price} ⭐ | Jelenlegi: ${currentStars} ⭐`);
@@ -243,16 +254,22 @@
             modalText.innerHTML = `Meg szeretnéd venni a következőt: <br><strong class="text-pink-600">${title}</strong>?<br>Ár: <span class="text-pink-600 font-bold">${price} ⭐</span>`;
             modal.classList.remove('hidden');
 
-            // Gomb esemény beállítása
             confirmBtn.onclick = function() {
-                closeModal();
+                closeModal('custom-modal');
                 executePurchase(price, title);
             };
         }
 
-        function closeModal() {
-            const modal = document.getElementById('custom-modal');
-            modal.classList.add('hidden');
+        function openSuccessModal(title) {
+            const modal = document.getElementById('success-modal');
+            const modalText = document.getElementById('success-modal-text');
+
+            modalText.innerHTML = `Sikeresen kiváltottad: <br><strong class="text-pink-600 text-base">${title}</strong>!<br><br>Jó szórakozást hozzá, nagyon megérdemled! 🥰`;
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
         }
 
         // --- 5. VÁSÁRLÁS LOGIKA ---
@@ -286,7 +303,7 @@
                 currentStars = newTotal;
                 document.getElementById('star-count').innerText = currentStars;
                 loadHistory();
-                alert(`Sikeres vásárlás! 🎉\nKiváltva: ${title}\nJó szórakozást! 🥰`);
+                openSuccessModal(title); // Szép felugró ablak a sikeres vásárláshoz!
             }
         }
 
