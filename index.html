@@ -65,8 +65,16 @@
         <!-- Bolt Jutalmak Listája -->
         <h2 class="text-2xl font-pacifico text-pink-600 mb-6 text-center">Választható Jutalmak 🎁</h2>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5" id="shop-items">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-12" id="shop-items">
             <!-- Ide tölti be a JS a kártyákat -->
+        </div>
+
+        <!-- Eddig Vett Termékek Listája -->
+        <div class="bg-white/80 backdrop-blur-md rounded-3xl p-6 shadow-lg border-2 border-pink-200 mb-6">
+            <h2 class="text-xl font-pacifico text-pink-600 mb-4 text-center">Eddig Beváltott Jutalmak 📜</h2>
+            <div id="history-list" class="space-y-3">
+                <p class="text-xs text-pink-400 text-center italic">Még nem volt vásárlás.</p>
+            </div>
         </div>
     </div>
 
@@ -140,7 +148,7 @@
             });
         }
 
-        // --- 4. ADATOK BETÖLTÉSE ---
+        // --- 4. ADATOK ÉS ELŐZMÉNYEK BETÖLTÉSE ---
         async function loadStars() {
             if (!supabaseClient) return;
             try {
@@ -154,7 +162,38 @@
             }
         }
 
-        // Valós idejű figyelés
+        async function loadHistory() {
+            if (!supabaseClient) return;
+            try {
+                let { data, error } = await supabaseClient
+                    .from('purchases')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                const historyContainer = document.getElementById('history-list');
+                if (data && data.length > 0) {
+                    historyContainer.innerHTML = '';
+                    data.forEach(purchase => {
+                        const date = new Date(purchase.created_at).toLocaleString('hu-HU', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                        historyContainer.innerHTML += `
+                            <div class="flex justify-between items-center bg-pink-50/80 p-3 rounded-xl border border-pink-100 text-xs">
+                                <div>
+                                    <span class="font-bold text-pink-700">${purchase.title}</span>
+                                    <span class="text-pink-400 ml-2">(${date})</span>
+                                </div>
+                                <span class="font-extrabold text-pink-500">-${purchase.price} ⭐</span>
+                            </div>
+                        `;
+                    });
+                } else {
+                    historyContainer.innerHTML = `<p class="text-xs text-pink-400 text-center italic">Még nem volt vásárlás.</p>`;
+                }
+            } catch (err) {
+                console.error("Előzmény betöltési hiba:", err);
+            }
+        }
+
+        // Valós idejű figyelés (egyenleg és előzmények frissítésére)
         if (supabaseClient) {
             supabaseClient.channel('custom-all-channel')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'user_stars' }, (payload) => {
@@ -163,17 +202,19 @@
                         document.getElementById('star-count').innerText = currentStars;
                     }
                 })
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'purchases' }, () => {
+                    loadHistory();
+                })
                 .subscribe();
         }
 
-        // --- 5. VÁSÁRLÁS LOGIKA (Javítva) ---
+        // --- 5. VÁSÁRLÁS LOGIKA ---
         async function buyItem(price, title) {
             if (!supabaseClient) {
                 alert("Hiba: Nincs kapcsolat az adatbázissal!");
                 return;
             }
 
-            // Friss lekérdezés vásárlás előtt, hogy pontos legyen az egyenleg
             await loadStars();
 
             if (currentStars < price) {
@@ -184,16 +225,23 @@
             if (confirm(`Biztosan meg szeretnéd venni ezt: "${title}" ${price} csillagért? 💕`)) {
                 const newTotal = currentStars - price;
                 
-                const { error } = await supabaseClient
+                // 1. Csillagok frissítése
+                const { error: updateError } = await supabaseClient
                     .from('user_stars')
                     .update({ stars: newTotal })
                     .eq('id', 1);
 
-                if (error) {
-                    alert("Hiba történt a vásárlás során: " + error.message);
+                // 2. Vásárlás rögzítése az előzmények közé
+                const { error: historyError } = await supabaseClient
+                    .from('purchases')
+                    .insert([{ title: title, price: price }]);
+
+                if (updateError || historyError) {
+                    alert("Hiba történt a vásárlás során!");
                 } else {
                     currentStars = newTotal;
                     document.getElementById('star-count').innerText = currentStars;
+                    loadHistory();
                     alert(`Sikeres vásárlás! 🎉\nKiváltva: ${title}\nJó szórakozást! 🥰`);
                 }
             }
@@ -247,6 +295,7 @@
         // Indításkor betöltés
         renderShop();
         loadStars();
+        loadHistory();
     </script>
 </body>
 </html>
