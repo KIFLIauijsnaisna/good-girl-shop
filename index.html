@@ -145,7 +145,7 @@
         <!-- Gomb a Galéria Megnyitásához -->
         <div class="text-center mb-6">
             <button onclick="toggleGallery()" class="bg-white/80 hover:bg-white text-pink-600 font-bold py-2 px-5 rounded-2xl shadow-md border-2 border-pink-200 text-xs transition transform active:scale-95 cursor-pointer">
-                📸 A mi emlékeink (Fotók)
+                📸 A mi emlékeink
             </button>
         </div>
 
@@ -225,12 +225,12 @@
     <!-- Rejtett Admin Felület (Láblécben) -->
     <footer class="mt-8 sm:mt-12 text-center border-t border-pink-200/40 pt-4 sm:pt-6 pb-4 relative z-10">
         <button onclick="toggleAdmin()" class="text-xs opacity-70 hover:opacity-100 underline transition font-medium cursor-pointer">
-            🔒 Csillag Adás (Szerelmednek)
+            🔒 Csillag Adás
         </button>
         
         <!-- Admin Panel -->
         <div id="admin-panel" class="hidden mt-3 sm:mt-4 p-4 sm:p-5 bg-white text-pink-900 rounded-2xl shadow-lg border border-pink-300 max-w-sm mx-auto">
-            <h3 class="font-bold text-pink-700 text-sm mb-3">⭐ Csillagok Jóváírása (Admin)</h3>
+            <h3 class="font-bold text-pink-700 text-sm mb-3">⭐ Csillagok Jóváírása </h3>
             <div class="flex justify-center gap-2">
                 <input type="password" id="admin-pass" placeholder="Jelszó" class="p-2 rounded-lg text-sm border border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-400 w-28 text-center">
                 <input type="number" id="add-amount" value="1" min="1" class="p-2 rounded-lg text-sm border border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-400 w-16 text-center font-bold text-pink-600">
@@ -246,7 +246,7 @@
         // --- 1. SUPABASE BEÁLLÍTÁSOK ---
         const SUPABASE_URL = "https://hwllaxxhexuoyxzildqv.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3bGxheHhoZXh1b3l4emlsZHF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIwODc3MzUsImV4cCI6MjEwNzY2MzczNX0.Ek0TcWIbP2-J3SROEacpiktTGXAb7oOQn_d39sZTDB8";
-        const ADMIN_PASSWORD = "1234";
+        const ADMIN_PASSWORD = "101015";
 
         let supabaseClient = null;
         try {
