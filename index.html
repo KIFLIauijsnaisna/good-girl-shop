@@ -65,13 +65,20 @@
         <!-- Bolt Jutalmak Listája -->
         <h2 class="text-2xl font-pacifico text-pink-600 mb-6 text-center">Választható Jutalmak 🎁</h2>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-12" id="shop-items">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8" id="shop-items">
             <!-- Ide tölti be a JS a kártyákat -->
         </div>
 
-        <!-- Eddig Vett Termékek Listája -->
-        <div class="bg-white/80 backdrop-blur-md rounded-3xl p-6 shadow-lg border-2 border-pink-200 mb-6">
-            <h2 class="text-xl font-pacifico text-pink-600 mb-4 text-center">Eddig Beváltott Jutalmak 📜</h2>
+        <!-- Gomb az Előzmények Megnyitásához -->
+        <div class="text-center mb-6">
+            <button onclick="toggleHistory()" id="history-btn" class="bg-white/90 hover:bg-white text-pink-600 font-bold py-3 px-6 rounded-2xl shadow-md border-2 border-pink-200 text-sm transition transform active:scale-95 cursor-pointer">
+                📜 Eddig beváltott jutalmak megtekintése
+            </button>
+        </div>
+
+        <!-- Lenyíló Előzmények Doboz (Alapból rejtett) -->
+        <div id="history-box" class="hidden bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border-2 border-pink-200 mb-6 transition-all duration-300">
+            <h3 class="text-lg font-pacifico text-pink-600 mb-4 text-center">Eddig Beváltott Jutalmak 📜</h3>
             <div id="history-list" class="space-y-3">
                 <p class="text-xs text-pink-400 text-center italic">Még nem volt vásárlás.</p>
             </div>
@@ -193,7 +200,20 @@
             }
         }
 
-        // Valós idejű figyelés (egyenleg és előzmények frissítésére)
+        // Előzmény doboz lenyitása / bezárása
+        function toggleHistory() {
+            const box = document.getElementById('history-box');
+            const btn = document.getElementById('history-btn');
+            box.classList.toggle('hidden');
+            if (!box.classList.contains('hidden')) {
+                loadHistory(); // Frissíti is, amikor megnyitja
+                btn.innerText = "📜 Előzmények elrejtése";
+            } else {
+                btn.innerText = "📜 Eddig beváltott jutalmak megtekintése";
+            }
+        }
+
+        // Valós idejű figyelés
         if (supabaseClient) {
             supabaseClient.channel('custom-all-channel')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'user_stars' }, (payload) => {
@@ -225,13 +245,11 @@
             if (confirm(`Biztosan meg szeretnéd venni ezt: "${title}" ${price} csillagért? 💕`)) {
                 const newTotal = currentStars - price;
                 
-                // 1. Csillagok frissítése
                 const { error: updateError } = await supabaseClient
                     .from('user_stars')
                     .update({ stars: newTotal })
                     .eq('id', 1);
 
-                // 2. Vásárlás rögzítése az előzmények közé
                 const { error: historyError } = await supabaseClient
                     .from('purchases')
                     .insert([{ title: title, price: price }]);
@@ -295,7 +313,6 @@
         // Indításkor betöltés
         renderShop();
         loadStars();
-        loadHistory();
     </script>
 </body>
 </html>
