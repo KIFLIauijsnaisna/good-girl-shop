@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Canvas Confetti (Konfetti animációhoz) -->
+    <!-- Canvas Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -16,10 +16,23 @@
     <style>
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #ffe6ea 0%, #ffc3d0 100%);
             min-height: 100vh;
             overflow-x: hidden;
+            transition: background 0.5s ease, color 0.5s ease;
         }
+
+        /* Nappali téma */
+        body.theme-light {
+            background: linear-gradient(135deg, #ffe6ea 0%, #ffc3d0 100%);
+            color: #831843;
+        }
+
+        /* Esti sötét romantikus téma */
+        body.theme-dark {
+            background: linear-gradient(135deg, #2a0826 0%, #4a1235 100%);
+            color: #fce7f3;
+        }
+
         .font-pacifico {
             font-family: 'Pacifico', cursive;
         }
@@ -39,24 +52,15 @@
             position: absolute;
             bottom: -50px;
             font-size: 1.5rem;
-            opacity: 0.4;
+            opacity: 0.3;
             animation: floatUp 8s linear infinite;
         }
         @keyframes floatUp {
-            0% {
-                transform: translateY(0) rotate(0deg) scale(0.8);
-                opacity: 0.4;
-            }
-            50% {
-                opacity: 0.7;
-            }
-            100% {
-                transform: translateY(-110vh) rotate(360deg) scale(1.2);
-                opacity: 0;
-            }
+            0% { transform: translateY(0) rotate(0deg) scale(0.8); opacity: 0.3; }
+            50% { opacity: 0.6; }
+            100% { transform: translateY(-110vh) rotate(360deg) scale(1.2); opacity: 0; }
         }
 
-        /* Kártya lebegés hatás */
         @keyframes float {
             0% { transform: translateY(0px) rotate(0deg); opacity: 1; }
             50% { transform: translateY(-12px) rotate(4deg); }
@@ -70,52 +74,97 @@
         }
         .card-hover:hover {
             transform: translateY(-6px) scale(1.01);
-            box-shadow: 0 12px 25px rgba(255, 105, 180, 0.25);
+            box-shadow: 0 12px 25px rgba(255, 105, 180, 0.3);
+        }
+
+        /* Polaroid kép stílus */
+        .polaroid {
+            background: white;
+            padding: 10px 10px 20px 10px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            transform: rotate(-2deg);
+            transition: all 0.3s ease;
+        }
+        .polaroid:nth-child(even) {
+            transform: rotate(2deg);
+        }
+        .polaroid:hover {
+            transform: rotate(0deg) scale(1.05);
+            z-index: 10;
         }
     </style>
 </head>
-<body class="p-4 md:p-8 text-pink-900 flex flex-col min-h-screen relative">
+<body class="theme-light p-4 md:p-8 flex flex-col min-h-screen relative">
 
     <!-- Animált háttér szívecskék container -->
     <div id="bg-hearts" class="bg-hearts-container"></div>
 
     <div class="max-w-3xl mx-auto w-full flex-grow relative z-10">
+        
+        <!-- Felső Gombok (Téma Váltó + Előzmények) -->
+        <div class="flex justify-between items-center mb-4">
+            <!-- Esti / Nappali Téma Váltó Gomb -->
+            <button onclick="toggleTheme()" id="theme-btn" class="bg-white/90 dark:bg-pink-950/80 hover:bg-white text-pink-600 font-bold py-2 px-3 rounded-xl shadow-md border-2 border-pink-200 text-xs transition transform active:scale-95 flex items-center gap-1.5 cursor-pointer select-none">
+                <span id="theme-icon">🌙</span> <span id="theme-text" class="hidden sm:inline">Esti téma</span>
+            </button>
+
+            <!-- Előzmények Gomb -->
+            <button onclick="toggleHistory()" id="history-btn" class="bg-white/90 hover:bg-white text-pink-600 font-bold py-2 px-3 rounded-xl shadow-md border-2 border-pink-200 text-xs transition transform active:scale-95 flex items-center gap-1.5 cursor-pointer select-none">
+                <span>📜</span> <span class="hidden sm:inline">Előzmények</span>
+            </button>
+        </div>
+
         <!-- Fejléc -->
-        <header class="text-center my-6 relative">
+        <header class="text-center my-4 relative">
             <span class="text-4xl floating-heart-header inline-block">💖</span>
-            <h1 class="text-4xl md:text-5xl font-pacifico text-pink-600 drop-shadow-sm my-2">
+            <h1 class="text-4xl md:text-5xl font-pacifico text-pink-500 drop-shadow-sm my-2">
                 Good Girl Csillagbolt
             </h1>
-            <p class="text-pink-500 font-medium italic text-sm md:text-base">Gyűjts csillagokat és váltsd be őket édes meglepetésekre! ✨</p>
+            <p class="text-pink-400 font-medium italic text-sm md:text-base">Gyűjts csillagokat és váltsd be őket édes meglepetésekre! ✨</p>
         </header>
 
-        <!-- Egyenleg Kártya és Jobb Fenti Előzmények Gomb -->
-        <div class="relative mb-8">
-            <!-- Előzmények Gomb Jobb Fent -->
-            <div class="absolute -top-3 right-2 z-20">
-                <button onclick="toggleHistory()" id="history-btn" class="bg-white/90 hover:bg-white text-pink-600 font-bold py-2 px-4 rounded-xl shadow-md border-2 border-pink-200 text-xs transition transform active:scale-95 flex items-center gap-1.5 cursor-pointer">
-                    <span>📜</span> <span class="hidden sm:inline">Előzmények</span>
-                </button>
+        <!-- Egyenleg Kártya -->
+        <div class="bg-white/90 backdrop-blur-md rounded-3xl p-6 mb-6 text-center shadow-xl border-4 border-pink-200 relative overflow-hidden">
+            <div class="absolute -top-4 -right-4 text-6xl opacity-20 select-none">🌸</div>
+            <div class="absolute -bottom-4 -left-4 text-6xl opacity-20 select-none">💖</div>
+            
+            <h2 class="text-sm md:text-base font-semibold text-pink-400 uppercase tracking-wider mb-1">Aktuális Egyenleged</h2>
+            <div class="flex items-center justify-center gap-3 my-2">
+                <span class="text-5xl md:text-6xl font-extrabold text-pink-600 drop-shadow" id="star-count">0</span>
+                <span class="text-4xl md:text-5xl animate-bounce select-none">⭐</span>
             </div>
+            
+            <!-- Napi Bók / Szerelmes Üzenet Doboz -->
+            <div class="mt-4 pt-3 border-t border-pink-100">
+                <p class="text-xs uppercase tracking-widest text-pink-400 font-bold mb-1">💌 A mai nap bóka neked:</p>
+                <p class="text-xs md:text-sm text-pink-600 font-medium italic" id="daily-compliment">
+                    "Betöltés..."
+                </p>
+            </div>
+        </div>
 
-            <!-- Egyenleg Kártya -->
-            <div class="bg-white/90 backdrop-blur-md rounded-3xl p-6 text-center shadow-xl border-4 border-pink-200 relative overflow-hidden">
-                <div class="absolute -top-4 -right-4 text-6xl opacity-20 select-none">🌸</div>
-                <div class="absolute -bottom-4 -left-4 text-6xl opacity-20 select-none">💖</div>
+        <!-- Gomb a Galéria Megnyitásához -->
+        <div class="text-center mb-6">
+            <button onclick="toggleGallery()" class="bg-white/80 hover:bg-white text-pink-600 font-bold py-2 px-5 rounded-2xl shadow-md border-2 border-pink-200 text-xs transition transform active:scale-95 cursor-pointer">
+                📸 A mi emlékeink (Fotók)
+            </button>
+        </div>
+
+        <!-- Lenyíló Fotógaléria (Alapból rejtett) -->
+        <div id="gallery-box" class="hidden bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border-2 border-pink-200 mb-8 transition-all duration-300">
+            <h3 class="text-lg font-pacifico text-pink-600 mb-4 text-center">Közös Pillanataink 🥰</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 justify-items-center">
                 
-                <h2 class="text-sm md:text-base font-semibold text-pink-400 uppercase tracking-wider mb-1">Aktuális Egyenleged</h2>
-                <div class="flex items-center justify-center gap-3 my-2">
-                    <span class="text-5xl md:text-6xl font-extrabold text-pink-600 drop-shadow" id="star-count">0</span>
-                    <span class="text-4xl md:text-5xl animate-bounce select-none">⭐</span>
+                <div class="polaroid rounded-xl max-w-xs text-center">
+                    <img src="https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=500" alt="Közös emlék" class="rounded-lg w-full h-48 object-cover">
+                    <p class="font-pacifico text-pink-600 text-sm mt-3">Az első közös randink 💕</p>
                 </div>
-                
-                <!-- Napi Bók / Szerelmes Üzenet Doboz -->
-                <div class="mt-4 pt-3 border-t border-pink-100">
-                    <p class="text-xs uppercase tracking-widest text-pink-400 font-bold mb-1">💌 A mai nap bóka neked:</p>
-                    <p class="text-xs md:text-sm text-pink-600 font-medium italic" id="daily-compliment">
-                        "Betöltés..."
-                    </p>
+
+                <div class="polaroid rounded-xl max-w-xs text-center">
+                    <img src="https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=500" alt="Sétálás" class="rounded-lg w-full h-48 object-cover">
+                    <p class="font-pacifico text-pink-600 text-sm mt-3">Mindig veled a legszebb ✨</p>
                 </div>
+
             </div>
         </div>
 
@@ -128,7 +177,7 @@
         </div>
 
         <!-- Bolt Jutalmak Listája -->
-        <h2 class="text-2xl font-pacifico text-pink-600 mb-6 text-center">Választható Jutalmak 🎁</h2>
+        <h2 class="text-2xl font-pacifico text-pink-500 mb-6 text-center">Választható Jutalmak 🎁</h2>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8" id="shop-items">
             <!-- Ide tölti be a JS a kártyákat -->
@@ -136,11 +185,11 @@
     </div>
 
     <!-- 1. MEGERŐSÍTŐ ABLAK (KÉRÉS) -->
-    <div id="custom-modal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border-4 border-pink-200 text-center transform scale-95 transition-all">
+    <div id="custom-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div class="bg-white text-pink-900 rounded-3xl p-6 max-w-sm w-full shadow-2xl border-4 border-pink-200 text-center transform scale-95 transition-all">
             <div class="text-4xl mb-2">🎁</div>
             <h3 class="font-pacifico text-2xl text-pink-600 mb-2">Biztosan megveszed?</h3>
-            <p id="modal-text" class="text-sm text-pink-800 font-medium mb-6 px-2"></p>
+            <p id="modal-text" class="text-sm font-medium mb-6 px-2"></p>
             <div class="flex gap-3 justify-center">
                 <button onclick="closeModal('custom-modal')" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-2.5 px-4 rounded-xl text-xs transition cursor-pointer">
                     Mégse ❌
@@ -153,11 +202,11 @@
     </div>
 
     <!-- 2. SIKERES VÁSÁRLÁS ABLAK (EREDMÉNY) -->
-    <div id="success-modal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border-4 border-pink-300 text-center transform scale-95 transition-all">
+    <div id="success-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div class="bg-white text-pink-900 rounded-3xl p-6 max-w-sm w-full shadow-2xl border-4 border-pink-300 text-center transform scale-95 transition-all">
             <div class="text-5xl mb-2 animate-bounce">🎉</div>
             <h3 class="font-pacifico text-2xl text-pink-600 mb-2">Sikeres Vásárlás!</h3>
-            <p id="success-modal-text" class="text-sm text-pink-800 font-medium mb-6 px-2"></p>
+            <p id="success-modal-text" class="text-sm font-medium mb-6 px-2"></p>
             <button onclick="closeModal('success-modal')" class="w-full bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs shadow transition cursor-pointer">
                 Szuper, alig várom! 🥰
             </button>
@@ -165,13 +214,13 @@
     </div>
 
     <!-- Rejtett Admin Felület (Láblécben) -->
-    <footer class="mt-12 text-center border-t border-pink-200/60 pt-6 pb-4 relative z-10">
-        <button onclick="toggleAdmin()" class="text-xs text-pink-400 hover:text-pink-600 underline transition font-medium">
+    <footer class="mt-12 text-center border-t border-pink-200/40 pt-6 pb-4 relative z-10">
+        <button onclick="toggleAdmin()" class="text-xs opacity-70 hover:opacity-100 underline transition font-medium">
             🔒 Csillag Adás (Szerelmednek)
         </button>
         
         <!-- Admin Panel -->
-        <div id="admin-panel" class="hidden mt-4 p-5 bg-white/95 rounded-2xl shadow-lg border border-pink-300 max-w-sm mx-auto">
+        <div id="admin-panel" class="hidden mt-4 p-5 bg-white text-pink-900 rounded-2xl shadow-lg border border-pink-300 max-w-sm mx-auto">
             <h3 class="font-bold text-pink-700 text-sm mb-3">⭐ Csillagok Jóváírása (Admin)</h3>
             <div class="flex justify-center gap-2">
                 <input type="password" id="admin-pass" placeholder="Jelszó" class="p-2 rounded-lg text-sm border border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-400 w-28 text-center">
@@ -197,7 +246,26 @@
             console.error("Supabase hiba:", e);
         }
 
-        // --- 2. NAPI BÓKOK LISTÁJA (Napi sorsoláshoz) ---
+        // --- 2. TÉMA VÁLTÓ (DARK / LIGHT MODE) ---
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+
+            if (body.classList.contains('theme-light')) {
+                body.classList.remove('theme-light');
+                body.classList.add('theme-dark');
+                icon.innerText = "☀️";
+                text.innerText = "Nappali téma";
+            } else {
+                body.classList.remove('theme-dark');
+                body.classList.add('theme-light');
+                icon.innerText = "🌙";
+                text.innerText = "Esti téma";
+            }
+        }
+
+        // --- 3. NAPI BÓKOK LISTÁJA (Pontosított szövegekkel) ---
         const compliments = [
             "Te vagy a legédesebb lány a világon! 💕",
             "Mindig büszke vagyok rád, ügyes vagy! ✨",
@@ -216,18 +284,14 @@
             "Ma is extra sok ölelés jár neked! 🤗"
         ];
 
-        // Napi bók kiválasztása a dátum alapján (hogy egész nap ugyanaz legyen, de holnap más)
         function setDailyCompliment() {
             const today = new Date();
-            // Létrehozunk egy számot a napból (pl. 20261015)
             const dateNumber = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
-            
-            // Kiszámoljuk ebből a indexet
             const index = dateNumber % compliments.length;
             document.getElementById('daily-compliment').innerText = `"${compliments[index]}"`;
         }
 
-        // --- 3. ANIMÁLT HÁTTÉR SZÍVECSKÉK ---
+        // --- 4. ANIMÁLT HÁTTÉR SZÍVECSKÉK ---
         function createBgHearts() {
             const container = document.getElementById('bg-hearts');
             const heartIcons = ['💖', '🌸', '💕', '✨', '💗', '🎀'];
@@ -245,7 +309,7 @@
             }
         }
 
-        // --- 4. JUTALMAK LISTÁJA ---
+        // --- 5. JUTALMAK LISTÁJA ---
         const items = [
             { id: 1, title: "10 Perc Hátmasszázs", price: 3, icon: "💆‍♀️", desc: "Egy pihentető masszázs a fárasztó nap után." },
             { id: 2, title: "Kedvenc Finomság / Süti", price: 5, icon: "🧁", desc: "Bármilyen édesség vagy nassolni való, amit megkívánsz." },
@@ -257,14 +321,13 @@
 
         let currentStars = 0;
 
-        // --- 5. BOLT KIRAKÁSA ---
         function renderShop() {
             const container = document.getElementById('shop-items');
             container.innerHTML = '';
 
             items.forEach(item => {
                 container.innerHTML += `
-                    <div class="bg-white/90 backdrop-blur-sm rounded-2xl p-5 shadow-md border-2 border-pink-100 card-hover flex flex-col justify-between">
+                    <div class="bg-white/90 text-pink-900 backdrop-blur-sm rounded-2xl p-5 shadow-md border-2 border-pink-100 card-hover flex flex-col justify-between">
                         <div>
                             <div class="text-4xl mb-2 text-center select-none">${item.icon}</div>
                             <h3 class="font-bold text-base text-pink-700 text-center">${item.title}</h3>
@@ -282,7 +345,7 @@
             });
         }
 
-        // --- 6. ADATOK ÉS ELŐZMÉNYEK BETÖLTÉSE ---
+        // --- 6. ADATOK BETÖLTÉSE ---
         async function loadStars() {
             if (!supabaseClient) return;
             try {
@@ -310,7 +373,7 @@
                     data.forEach(purchase => {
                         const date = new Date(purchase.created_at).toLocaleString('hu-HU', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
                         historyContainer.innerHTML += `
-                            <div class="flex justify-between items-center bg-pink-50/80 p-3 rounded-xl border border-pink-100 text-xs">
+                            <div class="flex justify-between items-center bg-pink-50/80 text-pink-900 p-3 rounded-xl border border-pink-100 text-xs">
                                 <div>
                                     <span class="font-bold text-pink-700">${purchase.title}</span>
                                     <span class="text-pink-400 ml-2">(${date})</span>
@@ -335,7 +398,12 @@
             }
         }
 
-        // Modális ablakok kezelése
+        function toggleGallery() {
+            const box = document.getElementById('gallery-box');
+            box.classList.toggle('hidden');
+        }
+
+        // Modális ablakok
         function openConfirmModal(price, title) {
             if (currentStars < price) {
                 alert(`Jaj, még nincs elég csillagod ehhez! 😢\nSzükséges: ${price} ⭐ | Jelenlegi: ${currentStars} ⭐`);
@@ -376,19 +444,13 @@
             document.getElementById(id).classList.add('hidden');
         }
 
-        // --- 7. VÁSÁRLÁS LOGIKA ---
+        // Vásárlás logika
         async function executePurchase(price, title) {
-            if (!supabaseClient) {
-                alert("Hiba: Nincs kapcsolat az adatbázissal!");
-                return;
-            }
+            if (!supabaseClient) return;
 
             await loadStars();
 
-            if (currentStars < price) {
-                alert("Nincs elég csillagod!");
-                return;
-            }
+            if (currentStars < price) return;
 
             const newTotal = currentStars - price;
             
@@ -401,9 +463,7 @@
                 .from('purchases')
                 .insert([{ title: title, price: price }]);
 
-            if (updateError || historyError) {
-                alert("Hiba történt a vásárlás során!");
-            } else {
+            if (!updateError && !historyError) {
                 currentStars = newTotal;
                 document.getElementById('star-count').innerText = currentStars;
                 loadHistory();
@@ -411,7 +471,7 @@
             }
         }
 
-        // Valós idejű figyelés
+        // Valós idejű szinkronizáció
         if (supabaseClient) {
             supabaseClient.channel('custom-all-channel')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'user_stars' }, (payload) => {
@@ -426,7 +486,7 @@
                 .subscribe();
         }
 
-        // --- 8. ADMIN PANEL LOGIKA ---
+        // Admin panel logika
         function toggleAdmin() {
             const panel = document.getElementById('admin-panel');
             panel.classList.toggle('hidden');
@@ -465,9 +525,6 @@
                 document.getElementById('admin-pass').value = '';
                 currentStars = newTotal;
                 document.getElementById('star-count').innerText = currentStars;
-            } else {
-                msg.innerText = "Hiba történt: " + error.message;
-                msg.className = "text-xs mt-3 text-red-500 font-semibold";
             }
         }
 
