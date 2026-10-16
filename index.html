@@ -92,6 +92,16 @@
             transform: rotate(0deg) scale(1.03);
             z-index: 10;
         }
+
+        /* Szerencsekártya pörgés animáció */
+        @keyframes spinCard {
+            0% { transform: rotateY(0deg) scale(1); }
+            50% { transform: rotateY(180deg) scale(1.1); }
+            100% { transform: rotateY(360deg) scale(1); }
+        }
+        .animate-spin-card {
+            animation: spinCard 1s ease-in-out infinite;
+        }
     </style>
 </head>
 <body class="theme-light p-3 sm:p-6 md:p-8 flex flex-col min-h-screen relative">
@@ -103,12 +113,10 @@
         
         <!-- Felső Gombok (Téma Váltó + Előzmények) -->
         <div class="flex justify-between items-center mb-4 gap-2">
-            <!-- Esti / Nappali Téma Váltó Gomb -->
             <button onclick="toggleTheme()" id="theme-btn" class="bg-white/90 hover:bg-white text-pink-600 font-bold py-2 px-3 rounded-xl shadow-md border-2 border-pink-200 text-xs transition transform active:scale-95 flex items-center gap-1.5 cursor-pointer select-none">
                 <span id="theme-icon">🌙</span> <span id="theme-text" class="inline">Esti téma</span>
             </button>
 
-            <!-- Előzmények Gomb -->
             <button onclick="toggleHistory()" id="history-btn" class="bg-white/90 hover:bg-white text-pink-600 font-bold py-2 px-3 rounded-xl shadow-md border-2 border-pink-200 text-xs transition transform active:scale-95 flex items-center gap-1.5 cursor-pointer select-none">
                 <span>📜</span> <span class="inline">Előzmények</span>
             </button>
@@ -121,6 +129,16 @@
                 Good Girl Csillagbolt
             </h1>
         </header>
+
+        <!-- Visszaszámláló Doboz (Évforduló) -->
+        <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-3 mb-5 text-center shadow-md border-2 border-pink-200">
+            <p class="text-[10px] sm:text-xs font-bold text-pink-400 uppercase tracking-wider mb-1" id="countdown-title">
+                ⏳ A Következő Évfordulónkig:
+            </p>
+            <div id="countdown-timer" class="font-bold text-pink-600 text-xs sm:text-sm">
+                Betöltés...
+            </div>
+        </div>
 
         <!-- Egyenleg Kártya -->
         <div class="bg-white/90 backdrop-blur-md rounded-3xl p-4 sm:p-6 mb-6 text-center shadow-xl border-4 border-pink-200 relative overflow-hidden">
@@ -135,14 +153,14 @@
             
             <!-- Napi Bók / Szerelmes Üzenet Doboz -->
             <div class="mt-3 sm:mt-4 pt-3 border-t border-pink-100">
-                <p class="text-[10px] sm:text-xs uppercase tracking-widest text-pink-400 font-bold mb-1">💌 A napi kedves üzeneted:</p>
+                <p class="text-[10px] sm:text-xs uppercase tracking-widest text-pink-400 font-bold mb-1">💌 A mai nap bóka neked:</p>
                 <p class="text-xs sm:text-sm text-pink-600 font-medium italic px-2" id="daily-compliment">
                     "Betöltés..."
                 </p>
             </div>
         </div>
 
-        <!-- Navigációs Gombok (Galéria + Szabályzat + Kérvényezés) -->
+        <!-- Navigációs Gombok -->
         <div class="flex flex-wrap justify-center gap-2 sm:gap-3 mb-6">
             <button onclick="toggleGallery()" class="bg-white/80 hover:bg-white text-pink-600 font-bold py-2 px-3 sm:px-4 rounded-2xl shadow-md border-2 border-pink-200 text-xs transition transform active:scale-95 cursor-pointer">
                 📸 Emlékek
@@ -150,12 +168,15 @@
             <button onclick="toggleRules()" class="bg-white/80 hover:bg-white text-pink-600 font-bold py-2 px-3 sm:px-4 rounded-2xl shadow-md border-2 border-pink-200 text-xs transition transform active:scale-95 cursor-pointer">
                 ⭐ Szabályzat
             </button>
+            <button onclick="toggleSpinModal()" class="bg-gradient-to-r from-amber-400 to-pink-400 hover:from-amber-500 hover:to-pink-500 text-white font-bold py-2 px-3 sm:px-4 rounded-2xl shadow-md text-xs transition transform active:scale-95 cursor-pointer flex items-center gap-1">
+                🎟️ Napi Szerencsekártya
+            </button>
             <button onclick="toggleRequestBox()" class="bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500 text-white font-bold py-2 px-3 sm:px-4 rounded-2xl shadow-md text-xs transition transform active:scale-95 cursor-pointer">
                 ✨ Csillag Kérvényezése
             </button>
         </div>
 
-        <!-- Lenyíló Csillag Kérvényező Doboz (Alapból rejtett) -->
+        <!-- Lenyíló Csillag Kérvényező Doboz -->
         <div id="request-box" class="hidden bg-white/90 backdrop-blur-md rounded-3xl p-4 sm:p-6 shadow-lg border-2 border-pink-300 mb-6 transition-all duration-300 text-xs sm:text-sm text-pink-900 text-center">
             <h3 class="text-base sm:text-lg font-pacifico text-pink-600 mb-2">Csillag Kérvényezése ✨</h3>
             <p class="text-xs text-pink-400 mb-4">Válaszd ki, miért szeretnél csillagot kapni a kedvesedtől:</p>
@@ -242,7 +263,29 @@
         </div>
     </div>
 
-    <!-- 1. MEGERŐSÍTŐ ABLAK -->
+    <!-- NAPI SZERENCSEKÁRTYA MODAL -->
+    <div id="spin-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-3 sm:p-4">
+        <div class="bg-white text-pink-900 rounded-3xl p-5 sm:p-6 max-w-sm w-full shadow-2xl border-4 border-amber-300 text-center relative">
+            <h3 class="font-pacifico text-xl text-pink-600 mb-2">🎟️ Napi Szerencsekártya</h3>
+            <p class="text-xs text-pink-400 mb-4">Húzz egy kártyát és derítsd ki, mit nyertél mára!</p>
+            
+            <div id="card-display" class="w-24 h-32 bg-gradient-to-tr from-pink-400 to-amber-300 rounded-2xl mx-auto flex items-center justify-center text-4xl shadow-lg my-4 select-none cursor-pointer">
+                🎁
+            </div>
+
+            <p id="spin-result" class="text-xs sm:text-sm font-bold text-pink-600 min-h-[40px] flex items-center justify-center px-2">
+                Kattints a kártyára a húzáshoz!
+            </p>
+
+            <div class="flex gap-2 mt-4">
+                <button onclick="closeModal('spin-modal')" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-2 rounded-xl text-xs transition cursor-pointer">
+                    Bezárás ❌
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MEGERŐSÍTŐ ABLAK -->
     <div id="custom-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-3 sm:p-4">
         <div class="bg-white text-pink-900 rounded-3xl p-5 sm:p-6 max-w-sm w-full shadow-2xl border-4 border-pink-200 text-center transform scale-95 transition-all">
             <div class="text-3xl sm:text-4xl mb-2">🎁</div>
@@ -259,7 +302,7 @@
         </div>
     </div>
 
-    <!-- 2. SIKERES VÁSÁRLÁS ABLAK -->
+    <!-- SIKERES VÁSÁRLÁS ABLAK -->
     <div id="success-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-3 sm:p-4">
         <div class="bg-white text-pink-900 rounded-3xl p-5 sm:p-6 max-w-sm w-full shadow-2xl border-4 border-pink-300 text-center transform scale-95 transition-all">
             <div class="text-4xl sm:text-5xl mb-2 animate-bounce">🎉</div>
@@ -304,6 +347,9 @@
         const PUSHOVER_USER_KEY = "u8a7i5rd26dxwnkwkmqug3keiad3d9";
         const PUSHOVER_API_TOKEN = "a855q9yvmiz45h94yvs1kygbd1oeuk";
 
+        // ÉVFORDULÓ DÁTUMA: 2024.09.16
+        const START_DATE = new Date("2024-09-16T00:00:00");
+
         let supabaseClient = null;
         try {
             supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -326,7 +372,7 @@
             } catch (err) { console.error(err); }
         }
 
-        // Pushover értesítés kérvényről (Kattintható linkkel a jóváhagyáshoz!)
+        // Pushover értesítés kérvényről
         async function sendStarRequestNotification(reason, note) {
             if (!PUSHOVER_USER_KEY || PUSHOVER_USER_KEY.includes("IDE_MASOLD")) return;
             try {
@@ -337,7 +383,6 @@
                 formData.append('message', `Indok: ${reason}\nMegjegyzés: "${note || 'Nincs megjegyzés'}"`);
                 formData.append('sound', 'intermission');
                 
-                // Beállítunk egy URL-t, amire rákattintva közvetlenül megnyithatod az admin oldalt vagy küldhetsz jóváhagyást
                 formData.append('url', window.location.href);
                 formData.append('url_title', 'Oldal megnyitása csillag adáshoz ⭐');
 
@@ -345,7 +390,142 @@
             } catch (err) { console.error(err); }
         }
 
-        // --- 2. TÉMA VÁLTÓ ---
+        // --- 2. VISSZASZÁMLÁLÓ LOGIKA (AUTOMATIKUS KÖVETKEZŐ ÉVFORDULÓ) ---
+        function updateCountdown() {
+            const now = new Date();
+            let nextAnniversary = new Date(now.getFullYear(), START_DATE.getMonth(), START_DATE.getDate());
+
+            // Ha az idei évforduló már elmúlt, a következő évire számolunk
+            if (now > nextAnniversary) {
+                nextAnniversary.setFullYear(now.getFullYear() + 1);
+            }
+
+            const diff = nextAnniversary - now;
+            const yearsTogether = nextAnniversary.getFullYear() - START_DATE.getFullYear();
+
+            const timerEl = document.getElementById('countdown-timer');
+            const titleEl = document.getElementById('countdown-title');
+
+            if (titleEl) {
+                titleEl.innerText = `⏳ A Következő (${yearsTogether}. Éves) Évfordulónkig:`;
+            }
+
+            // Ha pontosan az évforduló napján van
+            if (now.getMonth() === START_DATE.getMonth() && now.getDate() === START_DATE.getDate()) {
+                if(titleEl) titleEl.innerText = `🎉 MA VAN A ${yearsTogether}. ÉVES ÉVFORDULÓNK! 🥰`;
+                if(timerEl) timerEl.innerHTML = "<span class='text-pink-600 font-extrabold text-sm sm:text-base animate-pulse'>Nagyon szeretlek, boldog évfordulót! ❤️✨</span>";
+                
+                if (typeof confetti === 'function' && !window.holidayConfettiDone) {
+                    confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
+                    window.holidayConfettiDone = true;
+                }
+                return;
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            if(timerEl) {
+                timerEl.innerText = `${days} nap ${hours} óra ${minutes} perc ${seconds} mp`;
+            }
+        }
+        setInterval(updateCountdown, 1000);
+
+        // --- 3. NAPI SZERENCSEKÁRTYA PÖRGETÉS (SÚLYOZOTT ESÉLYEKKEL) ---
+        const prizes = [
+            { text: "Egy óriási puszi jár neked! 💋", stars: 0, icon: "💋", weight: 25 },
+            { text: "1 Csók a szerelmedtől! 😘", stars: 0, icon: "😘", weight: 25 },
+            { text: "Hosszú, meleg ölelés jár neked! 🤗", stars: 0, icon: "🤗", weight: 20 },
+            { text: "+1 ⭐ Csillag a szép mosolyodért!", stars: 1, icon: "⭐", weight: 15 },
+            { text: "Sajnos ma nem nyertél csillagot 😜", stars: 0, icon: "🙈", weight: 10 },
+            { text: "+2 ⭐ Extra Csillag bónusz!", stars: 2, icon: "🌟", weight: 4 },
+            { text: "🎉 JACKPOT! +5 Csillag csomag!", stars: 5, icon: "👑", weight: 1 }
+        ];
+
+        // Súlyozott véletlenszerű kiválasztás
+        function getRandomPrize() {
+            const totalWeight = prizes.reduce((sum, prize) => sum + prize.weight, 0);
+            let randomNum = Math.random() * totalWeight;
+
+            for (let prize of prizes) {
+                if (randomNum < prize.weight) {
+                    return prize;
+                }
+                randomNum -= prize.weight;
+            }
+            return prizes[0];
+        }
+
+        let hasSpunToday = false;
+
+        function checkSpinStatus() {
+            const lastSpin = localStorage.getItem('last_spin_date');
+            const todayStr = new Date().toDateString();
+            if (lastSpin === todayStr) {
+                hasSpunToday = true;
+            }
+        }
+
+        function toggleSpinModal() {
+            checkSpinStatus();
+            const modal = document.getElementById('spin-modal');
+            const resultEl = document.getElementById('spin-result');
+            const cardEl = document.getElementById('card-display');
+
+            if (hasSpunToday) {
+                if(resultEl) resultEl.innerText = "Ma már húztál kártyát! Gyere vissza holnap! 🥰";
+                if(cardEl) { cardEl.innerText = "🔒"; cardEl.onclick = null; }
+            } else {
+                if(resultEl) resultEl.innerText = "Kattints a kártyára a húzáshoz!";
+                if(cardEl) { cardEl.innerText = "🎁"; cardEl.onclick = drawCard; }
+            }
+
+            if(modal) modal.classList.remove('hidden');
+        }
+
+        async function drawCard() {
+            if (hasSpunToday) return;
+
+            const cardEl = document.getElementById('card-display');
+            const resultEl = document.getElementById('spin-result');
+
+            if(cardEl) {
+                cardEl.classList.add('animate-spin-card');
+                cardEl.onclick = null;
+            }
+
+            setTimeout(async () => {
+                const prize = getRandomPrize();
+                
+                if(cardEl) {
+                    cardEl.classList.remove('animate-spin-card');
+                    cardEl.innerText = prize.icon;
+                }
+
+                if(resultEl) resultEl.innerText = prize.text;
+
+                if (prize.stars > 0) {
+                    await loadStars();
+                    const newTotal = currentStars + prize.stars;
+                    await supabaseClient.from('user_stars').update({ stars: newTotal }).eq('id', 1);
+                    currentStars = newTotal;
+                    const el = document.getElementById('star-count');
+                    if(el) el.innerText = currentStars;
+
+                    if (typeof confetti === 'function') {
+                        confetti({ particleCount: prize.stars === 5 ? 150 : 50, spread: 70, origin: { y: 0.6 } });
+                    }
+                }
+
+                localStorage.setItem('last_spin_date', new Date().toDateString());
+                hasSpunToday = true;
+
+            }, 1200);
+        }
+
+        // --- 4. TÉMA VÁLTÓ ---
         function toggleTheme() {
             const body = document.body;
             const icon = document.getElementById('theme-icon');
@@ -364,7 +544,7 @@
             }
         }
 
-        // --- 3. NAPI BÓKOK ---
+        // --- 5. NAPI BÓKOK ---
         const compliments = [
             "Te vagy a legédesebb lány a világon! 💕",
             "Mindig büszke vagyok rád, ügyes vagy! ✨",
@@ -391,7 +571,7 @@
             if(element) element.innerText = `"${compliments[index]}"`;
         }
 
-        // --- 4. ANIMÁLT HÁTTÉR SZÍVECSKÉK ---
+        // --- 6. ANIMÁLT HÁTTÉR SZÍVECSKÉK ---
         function createBgHearts() {
             const container = document.getElementById('bg-hearts');
             if(!container) return;
@@ -410,14 +590,17 @@
             }
         }
 
-        // --- 5. JUTALMAK LISTÁJA ---
+        // --- 7. JUTALMAK LISTÁJA ---
         const items = [
             { id: 1, title: "10 Perc Hátmasszázs", price: 3, icon: "💆‍♀️", desc: "Egy pihentető masszázs a fárasztó nap után." },
-            { id: 2, title: "Kedvenc Finomság / Süti", price: 5, icon: "🧁", desc: "Bármilyen édesség vagy nassolni való, amit megkívánsz." },
-            { id: 3, title: "Moziest & Popcorn", price: 8, icon: "🍿", desc: "Te választod ki a filmet, én hozom a popcornt!" },
-            { id: 4, title: "Királylány Nap (Nem mosogatsz)", price: 10, icon: "👑", desc: "Ezen a napon minden házimunkát én csinálok helyetted." },
-            { id: 5, title: "Romantikus Vacsora Randi", price: 15, icon: "🍝", desc: "Elviszlek a kedvenc éttermedbe vagy főzök neked finomat." },
-            { id: 6, title: "Kívánság Jolly Joker", price: 20, icon: "✨", desc: "Bármit kérhetsz tőlem, amit csak szeretnél!" }
+            { id: 2, title: "20 Perc Masszázs", price: 5, icon: "💆‍♀️", desc: "Extra hosszú, kényeztető masszázs csak neked." },
+            { id: 3, title: "Kedvenc Finomság / Süti", price: 5, icon: "🧁", desc: "Bármilyen édesség vagy nassolni való, amit megkívánsz." },
+            { id: 4, title: "Moziest & Popcorn", price: 8, icon: "🍿", desc: "Te választod ki a filmet, én hozom a popcornt!" },
+            { id: 5, title: "Legjobb Vacsora", price: 8, icon: "🍲", desc: "Ha kell, ágyba viszem a vacsit, de mindenképp elkészítem neked." },
+            { id: 6, title: "1 Nap Csiki & Nyalogatás Nélkül", price: 8, icon: "😇", desc: "Egy egész napos békés védettség, se csikizés, se nyalogatás." },
+            { id: 7, title: "Smink (Csak hétvégén)", price: 10, icon: "💄", desc: "Kipróbálhatod rajtam a sminktudásod (ha nem megyünk sehova)." },
+            { id: 8, title: "Romantikus Vacsora Randi", price: 15, icon: "🍝", desc: "Elviszlek a kedvenc éttermedbe vagy főzök neked finomat." },
+            { id: 9, title: "Kívánság Jolly Joker", price: 20, icon: "✨", desc: "Bármit kérhetsz tőlem, amit csak szeretnél!" }
         ];
 
         let currentStars = 0;
@@ -447,7 +630,7 @@
             });
         }
 
-        // --- 6. ADATOK BETÖLTÉSE ---
+        // --- 8. ADATOK BETÖLTÉSE ---
         async function loadStars() {
             if (!supabaseClient) return;
             try {
@@ -516,7 +699,6 @@
             msg.innerText = "Küldés folyamatban... ⏳";
             msg.className = "text-xs mt-3 text-pink-600 font-semibold";
 
-            // Pushover értesítés küldése neked
             await sendStarRequestNotification(reason, note);
 
             msg.innerText = "Sikeresen elküldve a szerelmednek! 🥰 Várj a jóváhagyásra!";
@@ -655,6 +837,8 @@
         loadStars();
         setDailyCompliment();
         createBgHearts();
+        updateCountdown();
+        checkSpinStatus();
     </script>
 </body>
 </html>
