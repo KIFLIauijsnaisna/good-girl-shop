@@ -243,16 +243,40 @@
     </footer>
 
     <script>
-        // --- 1. SUPABASE BEÁLLÍTÁSOK ---
+        // --- 1. SUPABASE ÉS PUSHOVER BEÁLLÍTÁSOK ---
         const SUPABASE_URL = "https://hwllaxxhexuoyxzildqv.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3bGxheHhoZXh1b3l4emlsZHF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIwODc3MzUsImV4cCI6MjEwNzY2MzczNX0.Ek0TcWIbP2-J3SROEacpiktTGXAb7oOQn_d39sZTDB8";
         const ADMIN_PASSWORD = "101015";
+
+        // IDE ÍRD BE A PUSHOVER KULCSAIDAT:
+        const PUSHOVER_USER_KEY = "u8a7i5rd26dxwnkwkmqug3keiad3d9";
+        const PUSHOVER_API_TOKEN = "a855q9yvmiz45h94yvs1kygbd1oeuk";
 
         let supabaseClient = null;
         try {
             supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         } catch (e) {
             console.error("Supabase hiba:", e);
+        }
+
+        // Pushover értesítés küldése
+        async function sendPushoverNotification(title, price) {
+            if (!PUSHOVER_USER_KEY || PUSHOVER_USER_KEY.includes("IDE_MASOLD")) return;
+            try {
+                const formData = new FormData();
+                formData.append('token', PUSHOVER_API_TOKEN);
+                formData.append('user', PUSHOVER_USER_KEY);
+                formData.append('title', '🎉 Új vásárlás a Csillagboltban!');
+                formData.append('message', `A párod kiváltotta: "${title}" (${price} ⭐)`);
+                formData.append('sound', 'magic');
+
+                await fetch('https://api.pushover.net/1/messages.json', {
+                    method: 'POST',
+                    body: formData
+                });
+            } catch (err) {
+                console.error("Pushover értesítési hiba:", err);
+            }
         }
 
         // --- 2. TÉMA VÁLTÓ (DARK / LIGHT MODE) ---
@@ -306,7 +330,7 @@
             const container = document.getElementById('bg-hearts');
             if(!container) return;
             const heartIcons = ['💖', '🌸', '💕', '✨', '💗', '🎀'];
-            const numberOfHearts = window.innerWidth < 768 ? 8 : 15; // Mobilon kevesebb a jobb teljesítményért
+            const numberOfHearts = window.innerWidth < 768 ? 8 : 15;
 
             for (let i = 0; i < numberOfHearts; i++) {
                 const heart = document.createElement('div');
@@ -466,7 +490,7 @@
             if(el) el.classList.add('hidden');
         }
 
-        // Vásárlás logika
+        // Vásárlás logika + Pushover értesítés
         async function executePurchase(price, title) {
             if (!supabaseClient) return;
 
@@ -491,6 +515,9 @@
                 if(el) el.innerText = currentStars;
                 loadHistory();
                 openSuccessModal(title);
+                
+                // Pushover értesítés küldése
+                sendPushoverNotification(title, price);
             }
         }
 
