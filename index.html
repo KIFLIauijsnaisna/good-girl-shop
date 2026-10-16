@@ -142,24 +142,50 @@
             </div>
         </div>
 
-        <!-- Navigációs Gombok (Galéria + Szabályzat) -->
-        <div class="flex flex-wrap justify-center gap-3 mb-6">
-            <button onclick="toggleGallery()" class="bg-white/80 hover:bg-white text-pink-600 font-bold py-2 px-4 rounded-2xl shadow-md border-2 border-pink-200 text-xs transition transform active:scale-95 cursor-pointer">
-                📸 A mi emlékeink
+        <!-- Navigációs Gombok (Galéria + Szabályzat + Kérvényezés) -->
+        <div class="flex flex-wrap justify-center gap-2 sm:gap-3 mb-6">
+            <button onclick="toggleGallery()" class="bg-white/80 hover:bg-white text-pink-600 font-bold py-2 px-3 sm:px-4 rounded-2xl shadow-md border-2 border-pink-200 text-xs transition transform active:scale-95 cursor-pointer">
+                📸 Emlékek
             </button>
-            <button onclick="toggleRules()" class="bg-white/80 hover:bg-white text-pink-600 font-bold py-2 px-4 rounded-2xl shadow-md border-2 border-pink-200 text-xs transition transform active:scale-95 cursor-pointer">
-                ⭐ Csillag Szabályzat
+            <button onclick="toggleRules()" class="bg-white/80 hover:bg-white text-pink-600 font-bold py-2 px-3 sm:px-4 rounded-2xl shadow-md border-2 border-pink-200 text-xs transition transform active:scale-95 cursor-pointer">
+                ⭐ Szabályzat
+            </button>
+            <button onclick="toggleRequestBox()" class="bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500 text-white font-bold py-2 px-3 sm:px-4 rounded-2xl shadow-md text-xs transition transform active:scale-95 cursor-pointer">
+                ✨ Csillag Kérvényezése
             </button>
         </div>
 
-        <!-- Lenyíló Szabályzat Doboz (Alapból rejtett) -->
+        <!-- Lenyíló Csillag Kérvényező Doboz (Alapból rejtett) -->
+        <div id="request-box" class="hidden bg-white/90 backdrop-blur-md rounded-3xl p-4 sm:p-6 shadow-lg border-2 border-pink-300 mb-6 transition-all duration-300 text-xs sm:text-sm text-pink-900 text-center">
+            <h3 class="text-base sm:text-lg font-pacifico text-pink-600 mb-2">Csillag Kérvényezése ✨</h3>
+            <p class="text-xs text-pink-400 mb-4">Válaszd ki, miért szeretnél csillagot kapni a kedvesedtől:</p>
+            
+            <div class="flex flex-col gap-3 max-w-md mx-auto">
+                <select id="request-reason" class="p-2.5 rounded-xl border border-pink-300 bg-white text-pink-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-pink-400">
+                    <option value="Kedvesség & puszi (+1 ⭐)">💖 Kedvesség & puszi (+1 ⭐)</option>
+                    <option value="Finom vacsora / sütés (+2 ⭐)">🍳 Finom vacsora / sütés (+2 ⭐)</option>
+                    <option value="Segítség a házimunkában (+2 ⭐)">🧹 Segítség a házimunkában (+2 ⭐)</option>
+                    <option value="Példás Good Girl viselkedés (+3 ⭐)">👑 Példás Good Girl viselkedés (+3 ⭐)</option>
+                    <option value="Hiszti mentes nap (+2 ⭐)">🤭 Hiszti mentes nap (+2 ⭐)</option>
+                </select>
+
+                <input type="text" id="request-note" placeholder="Egyedi üzenet (pl. Ma különösen cuki voltam) - Opcionális" class="p-2.5 rounded-xl border border-pink-300 bg-white text-pink-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-pink-400">
+
+                <button onclick="sendStarRequest()" class="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold py-2.5 px-4 rounded-xl text-xs shadow transition cursor-pointer">
+                    Kérvény elküldése a szerelmednek! 💌
+                </button>
+            </div>
+            <p id="request-msg" class="text-xs mt-3 font-semibold"></p>
+        </div>
+
+        <!-- Lenyíló Szabályzat Doboz -->
         <div id="rules-box" class="hidden bg-white/90 backdrop-blur-md rounded-3xl p-4 sm:p-6 shadow-lg border-2 border-pink-200 mb-6 transition-all duration-300 text-xs sm:text-sm text-pink-900">
             <h3 class="text-base sm:text-lg font-pacifico text-pink-600 mb-3 text-center">⭐ Good Girl Szabályzat ⭐</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="bg-green-50/80 p-3.5 rounded-2xl border border-green-200">
                     <h4 class="font-bold text-green-700 mb-2 text-center">✨ Így szerezhetsz csillagokat:</h4>
                     <ul class="space-y-1.5 text-green-900">
-                        <li>💖 Kedvesség & puszi (streak): <strong>+1 ⭐</strong></li>
+                        <li>💖 Kedvesség & puszi: <strong>+1 ⭐</strong></li>
                         <li>🍳 Finom vacsora / sütés: <strong>+2-3 ⭐</strong></li>
                         <li>🧹 Segítség a házimunkában: <strong>+2 ⭐</strong></li>
                         <li>👑 Példás Good Girl viselkedés: <strong>+3-5 ⭐</strong></li>
@@ -177,35 +203,30 @@
             </div>
         </div>
 
-        <!-- Lenyíló Fotógaléria (Alapból rejtett) -->
+        <!-- Lenyíló Fotógaléria -->
         <div id="gallery-box" class="hidden bg-white/90 backdrop-blur-md rounded-3xl p-4 sm:p-6 shadow-lg border-2 border-pink-200 mb-6 transition-all duration-300">
             <h3 class="text-base sm:text-lg font-pacifico text-pink-600 mb-4 text-center">Közös Pillanataink 🥰</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 justify-items-center">
-                
                 <div class="polaroid rounded-xl w-full max-w-xs text-center">
                     <img src="1.jpg" alt="Közös emlék" class="rounded-lg w-full h-40 sm:h-48 object-cover">
                     <p class="font-pacifico text-pink-600 text-xs sm:text-sm mt-3">Pancsi pancsi 💕</p>
                 </div>
-
                 <div class="polaroid rounded-xl w-full max-w-xs text-center">
                     <img src="2.jpg" alt="Sétálás" class="rounded-lg w-full h-40 sm:h-48 object-cover">
                     <p class="font-pacifico text-pink-600 text-xs sm:text-sm mt-3">Mindig veled a legszebb ✨</p>
                 </div>
-
                 <div class="polaroid rounded-xl w-full max-w-xs text-center">
                     <img src="3.jpg" alt="Sétálás" class="rounded-lg w-full h-40 sm:h-48 object-cover">
                     <p class="font-pacifico text-pink-600 text-xs sm:text-sm mt-3">Nagyon szeretlek ❤️</p>
                 </div>
-
                 <div class="polaroid rounded-xl w-full max-w-xs text-center">
                     <img src="4.jpg" alt="Sétálás" class="rounded-lg w-full h-40 sm:h-48 object-cover">
                     <p class="font-pacifico text-pink-600 text-xs sm:text-sm mt-3">Mert mindig megnevettetsz 😘</p>
                 </div>
-                
             </div>
         </div>
 
-        <!-- Lenyíló Előzmények Doboz (Alapból rejtett) -->
+        <!-- Lenyíló Előzmények Doboz -->
         <div id="history-box" class="hidden bg-white/90 backdrop-blur-md rounded-3xl p-4 sm:p-6 shadow-lg border-2 border-pink-200 mb-6 transition-all duration-300">
             <h3 class="text-base sm:text-lg font-pacifico text-pink-600 mb-4 text-center">Eddig Beváltott Jutalmak 📜</h3>
             <div id="history-list" class="space-y-2 sm:space-y-3">
@@ -221,7 +242,7 @@
         </div>
     </div>
 
-    <!-- 1. MEGERŐSÍTŐ ABLAK (KÉRÉS) -->
+    <!-- 1. MEGERŐSÍTŐ ABLAK -->
     <div id="custom-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-3 sm:p-4">
         <div class="bg-white text-pink-900 rounded-3xl p-5 sm:p-6 max-w-sm w-full shadow-2xl border-4 border-pink-200 text-center transform scale-95 transition-all">
             <div class="text-3xl sm:text-4xl mb-2">🎁</div>
@@ -238,7 +259,7 @@
         </div>
     </div>
 
-    <!-- 2. SIKERES VÁSÁRLÁS ABLAK (EREDMÉNY) -->
+    <!-- 2. SIKERES VÁSÁRLÁS ABLAK -->
     <div id="success-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-3 sm:p-4">
         <div class="bg-white text-pink-900 rounded-3xl p-5 sm:p-6 max-w-sm w-full shadow-2xl border-4 border-pink-300 text-center transform scale-95 transition-all">
             <div class="text-4xl sm:text-5xl mb-2 animate-bounce">🎉</div>
@@ -250,13 +271,12 @@
         </div>
     </div>
 
-    <!-- Rejtett Admin Felület (Láblécben) -->
+    <!-- Rejtett Admin Felület -->
     <footer class="mt-8 sm:mt-12 text-center border-t border-pink-200/40 pt-4 sm:pt-6 pb-4 relative z-10">
         <button onclick="toggleAdmin()" class="text-xs opacity-70 hover:opacity-100 underline transition font-medium cursor-pointer">
             🔒 Admin Vezérlő
         </button>
         
-        <!-- Admin Panel -->
         <div id="admin-panel" class="hidden mt-3 sm:mt-4 p-4 sm:p-5 bg-white text-pink-900 rounded-2xl shadow-lg border border-pink-300 max-w-sm mx-auto">
             <h3 class="font-bold text-pink-700 text-sm mb-3">⭐ Csillagok Kezelése (Admin)</h3>
             <div class="flex flex-col gap-2.5">
@@ -281,7 +301,6 @@
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3bGxheHhoZXh1b3l4emlsZHF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIwODc3MzUsImV4cCI6MjEwNzY2MzczNX0.Ek0TcWIbP2-J3SROEacpiktTGXAb7oOQn_d39sZTDB8";
         const ADMIN_PASSWORD = "101015";
 
-        // IDE ÍRD BE A PUSHOVER KULCSAIDAT:
         const PUSHOVER_USER_KEY = "u8a7i5rd26dxwnkwkmqug3keiad3d9";
         const PUSHOVER_API_TOKEN = "a855q9yvmiz45h94yvs1kygbd1oeuk";
 
@@ -292,7 +311,7 @@
             console.error("Supabase hiba:", e);
         }
 
-        // Pushover értesítés küldése
+        // Pushover értesítés vásárlásról
         async function sendPushoverNotification(title, price) {
             if (!PUSHOVER_USER_KEY || PUSHOVER_USER_KEY.includes("IDE_MASOLD")) return;
             try {
@@ -303,16 +322,30 @@
                 formData.append('message', `A párod kiváltotta: "${title}" (${price} ⭐)`);
                 formData.append('sound', 'magic');
 
-                await fetch('https://api.pushover.net/1/messages.json', {
-                    method: 'POST',
-                    body: formData
-                });
-            } catch (err) {
-                console.error("Pushover értesítési hiba:", err);
-            }
+                await fetch('https://api.pushover.net/1/messages.json', { method: 'POST', body: formData });
+            } catch (err) { console.error(err); }
         }
 
-        // --- 2. TÉMA VÁLTÓ (DARK / LIGHT MODE) ---
+        // Pushover értesítés kérvényről (Kattintható linkkel a jóváhagyáshoz!)
+        async function sendStarRequestNotification(reason, note) {
+            if (!PUSHOVER_USER_KEY || PUSHOVER_USER_KEY.includes("IDE_MASOLD")) return;
+            try {
+                const formData = new FormData();
+                formData.append('token', PUSHOVER_API_TOKEN);
+                formData.append('user', PUSHOVER_USER_KEY);
+                formData.append('title', '⭐ Új Csillag Kérvény érkezett!');
+                formData.append('message', `Indok: ${reason}\nMegjegyzés: "${note || 'Nincs megjegyzés'}"`);
+                formData.append('sound', 'intermission');
+                
+                // Beállítunk egy URL-t, amire rákattintva közvetlenül megnyithatod az admin oldalt vagy küldhetsz jóváhagyást
+                formData.append('url', window.location.href);
+                formData.append('url_title', 'Oldal megnyitása csillag adáshoz ⭐');
+
+                await fetch('https://api.pushover.net/1/messages.json', { method: 'POST', body: formData });
+            } catch (err) { console.error(err); }
+        }
+
+        // --- 2. TÉMA VÁLTÓ ---
         function toggleTheme() {
             const body = document.body;
             const icon = document.getElementById('theme-icon');
@@ -331,7 +364,7 @@
             }
         }
 
-        // --- 3. NAPI BÓKOK LISTÁJA ---
+        // --- 3. NAPI BÓKOK ---
         const compliments = [
             "Te vagy a legédesebb lány a világon! 💕",
             "Mindig büszke vagyok rád, ügyes vagy! ✨",
@@ -424,19 +457,13 @@
                     const el = document.getElementById('star-count');
                     if(el) el.innerText = currentStars;
                 }
-            } catch (err) {
-                console.error("Adatbetöltési hiba:", err);
-            }
+            } catch (err) { console.error(err); }
         }
 
         async function loadHistory() {
             if (!supabaseClient) return;
             try {
-                let { data, error } = await supabaseClient
-                    .from('purchases')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-
+                let { data, error } = await supabaseClient.from('purchases').select('*').order('created_at', { ascending: false });
                 const historyContainer = document.getElementById('history-list');
                 if(!historyContainer) return;
 
@@ -457,19 +484,12 @@
                 } else {
                     historyContainer.innerHTML = `<p class="text-xs text-pink-400 text-center italic">Még nem volt vásárlás.</p>`;
                 }
-            } catch (err) {
-                console.error("Előzmény betöltési hiba:", err);
-            }
+            } catch (err) { console.error(err); }
         }
 
         function toggleHistory() {
             const box = document.getElementById('history-box');
-            if(box) {
-                box.classList.toggle('hidden');
-                if (!box.classList.contains('hidden')) {
-                    loadHistory(); 
-                }
-            }
+            if(box) { box.classList.toggle('hidden'); if (!box.classList.contains('hidden')) loadHistory(); }
         }
 
         function toggleGallery() {
@@ -480,6 +500,33 @@
         function toggleRules() {
             const box = document.getElementById('rules-box');
             if(box) box.classList.toggle('hidden');
+        }
+
+        function toggleRequestBox() {
+            const box = document.getElementById('request-box');
+            if(box) box.classList.toggle('hidden');
+        }
+
+        // Kérvény elküldése funkció
+        async function sendStarRequest() {
+            const reason = document.getElementById('request-reason').value;
+            const note = document.getElementById('request-note').value;
+            const msg = document.getElementById('request-msg');
+
+            msg.innerText = "Küldés folyamatban... ⏳";
+            msg.className = "text-xs mt-3 text-pink-600 font-semibold";
+
+            // Pushover értesítés küldése neked
+            await sendStarRequestNotification(reason, note);
+
+            msg.innerText = "Sikeresen elküldve a szerelmednek! 🥰 Várj a jóváhagyásra!";
+            msg.className = "text-xs mt-3 text-green-600 font-semibold";
+            document.getElementById('request-note').value = '';
+
+            setTimeout(() => {
+                document.getElementById('request-box').classList.add('hidden');
+                msg.innerText = "";
+            }, 3500);
         }
 
         // Modális ablakok
@@ -506,12 +553,7 @@
 
         function openSuccessModal(title) {
             if (typeof confetti === 'function') {
-                confetti({
-                    particleCount: 80,
-                    spread: 70,
-                    origin: { y: 0.6 },
-                    colors: ['#ff69b4', '#ff1493', '#ffc0cb', '#ffd700']
-                });
+                confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 }, colors: ['#ff69b4', '#ff1493', '#ffc0cb', '#ffd700'] });
             }
 
             const modal = document.getElementById('success-modal');
@@ -528,24 +570,15 @@
             if(el) el.classList.add('hidden');
         }
 
-        // Vásárlás logika + Pushover értesítés
+        // Vásárlás logika
         async function executePurchase(price, title) {
             if (!supabaseClient) return;
-
             await loadStars();
-
             if (currentStars < price) return;
 
             const newTotal = currentStars - price;
-            
-            const { error: updateError } = await supabaseClient
-                .from('user_stars')
-                .update({ stars: newTotal })
-                .eq('id', 1);
-
-            const { error: historyError } = await supabaseClient
-                .from('purchases')
-                .insert([{ title: title, price: price }]);
+            const { error: updateError } = await supabaseClient.from('user_stars').update({ stars: newTotal }).eq('id', 1);
+            const { error: historyError } = await supabaseClient.from('purchases').insert([{ title: title, price: price }]);
 
             if (!updateError && !historyError) {
                 currentStars = newTotal;
@@ -553,8 +586,6 @@
                 if(el) el.innerText = currentStars;
                 loadHistory();
                 openSuccessModal(title);
-                
-                // Pushover értesítés küldése
                 sendPushoverNotification(title, price);
             }
         }
@@ -569,9 +600,7 @@
                         if(el) el.innerText = currentStars;
                     }
                 })
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'purchases' }, () => {
-                    loadHistory();
-                })
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'purchases' }, () => { loadHistory(); })
                 .subscribe();
         }
 
@@ -605,19 +634,11 @@
             }
 
             await loadStars();
-            
             let newTotal = currentStars;
-            if (action === 'add') {
-                newTotal += amount;
-            } else if (action === 'sub') {
-                newTotal -= amount;
-                if (newTotal < 0) newTotal = 0; // Ne mehessen 0 alá
-            }
+            if (action === 'add') newTotal += amount;
+            else if (action === 'sub') { newTotal -= amount; if (newTotal < 0) newTotal = 0; }
             
-            const { error } = await supabaseClient
-                .from('user_stars')
-                .update({ stars: newTotal })
-                .eq('id', 1);
+            const { error } = await supabaseClient.from('user_stars').update({ stars: newTotal }).eq('id', 1);
 
             if (!error) {
                 msg.innerText = action === 'add' ? `Sikeresen hozzáadva +${amount} csillag! ✨` : `Sikeresen levonva -${amount} csillag! ⚠️`;
@@ -626,9 +647,6 @@
                 currentStars = newTotal;
                 const el = document.getElementById('star-count');
                 if(el) el.innerText = currentStars;
-            } else {
-                msg.innerText = "Hiba történt az adatbázis frissítésekor!";
-                msg.className = "text-xs mt-3 text-red-500 font-semibold";
             }
         }
 
