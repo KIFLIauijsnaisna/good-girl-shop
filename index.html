@@ -130,8 +130,8 @@
             </h1>
         </header>
 
-        <!-- Visszaszámláló Doboz (Évforduló) -->
-        <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-3 mb-5 text-center shadow-md border-2 border-pink-200">
+        <!-- Visszaszámláló Doboz (Évforduló) - Hely kihagyva a fejléc után -->
+        <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-3 mb-6 mt-6 text-center shadow-md border-2 border-pink-200">
             <p class="text-[10px] sm:text-xs font-bold text-pink-400 uppercase tracking-wider mb-1" id="countdown-title">
                 ⏳ A Következő Évfordulónkig:
             </p>
@@ -390,12 +390,11 @@
             } catch (err) { console.error(err); }
         }
 
-        // --- 2. VISSZASZÁMLÁLÓ LOGIKA (AUTOMATIKUS KÖVETKEZŐ ÉVFORDULÓ) ---
+        // --- 2. VISSZASZÁMLÁLÓ LOGIKA ---
         function updateCountdown() {
             const now = new Date();
             let nextAnniversary = new Date(now.getFullYear(), START_DATE.getMonth(), START_DATE.getDate());
 
-            // Ha az idei évforduló már elmúlt, a következő évire számolunk
             if (now > nextAnniversary) {
                 nextAnniversary.setFullYear(now.getFullYear() + 1);
             }
@@ -410,7 +409,6 @@
                 titleEl.innerText = `⏳ A Következő (${yearsTogether}. Éves) Évfordulónkig:`;
             }
 
-            // Ha pontosan az évforduló napján van
             if (now.getMonth() === START_DATE.getMonth() && now.getDate() === START_DATE.getDate()) {
                 if(titleEl) titleEl.innerText = `🎉 MA VAN A ${yearsTogether}. ÉVES ÉVFORDULÓNK! 🥰`;
                 if(timerEl) timerEl.innerHTML = "<span class='text-pink-600 font-extrabold text-sm sm:text-base animate-pulse'>Nagyon szeretlek, boldog évfordulót! ❤️✨</span>";
@@ -433,7 +431,7 @@
         }
         setInterval(updateCountdown, 1000);
 
-        // --- 3. NAPI SZERENCSEKÁRTYA PÖRGETÉS (SÚLYOZOTT ESÉLYEKKEL) ---
+        // --- 3. NAPI SZERENCSEKÁRTYA PÖRGETÉS ---
         const prizes = [
             { text: "Egy óriási puszi jár neked! 💋", stars: 0, icon: "💋", weight: 25 },
             { text: "1 Csók a szerelmedtől! 😘", stars: 0, icon: "😘", weight: 25 },
@@ -444,7 +442,6 @@
             { text: "🎉 JACKPOT! +5 Csillag csomag!", stars: 5, icon: "👑", weight: 1 }
         ];
 
-        // Súlyozott véletlenszerű kiválasztás
         function getRandomPrize() {
             const totalWeight = prizes.reduce((sum, prize) => sum + prize.weight, 0);
             let randomNum = Math.random() * totalWeight;
@@ -458,35 +455,40 @@
             return prizes[0];
         }
 
-        let hasSpunToday = false;
-
         function checkSpinStatus() {
             const lastSpin = localStorage.getItem('last_spin_date');
             const todayStr = new Date().toDateString();
-            if (lastSpin === todayStr) {
-                hasSpunToday = true;
-            }
+            return lastSpin === todayStr;
         }
 
         function toggleSpinModal() {
-            checkSpinStatus();
             const modal = document.getElementById('spin-modal');
             const resultEl = document.getElementById('spin-result');
             const cardEl = document.getElementById('card-display');
 
-            if (hasSpunToday) {
-                if(resultEl) resultEl.innerText = "Ma már húztál kártyát! Gyere vissza holnap! 🥰";
-                if(cardEl) { cardEl.innerText = "🔒"; cardEl.onclick = null; }
+            if (checkSpinStatus()) {
+                // Ha már húzott ma, mutassuk az aznap húzott eredményt
+                const savedPrizeText = localStorage.getItem('last_spin_text') || "Már húztál kártyát mára! 🥰";
+                const savedPrizeIcon = localStorage.getItem('last_spin_icon') || "✨";
+                
+                if(resultEl) resultEl.innerText = savedPrizeText;
+                if(cardEl) { 
+                    cardEl.innerText = savedPrizeIcon; 
+                    cardEl.onclick = null; 
+                }
             } else {
                 if(resultEl) resultEl.innerText = "Kattints a kártyára a húzáshoz!";
-                if(cardEl) { cardEl.innerText = "🎁"; cardEl.onclick = drawCard; }
+                if(cardEl) { 
+                    cardEl.innerText = "🎁"; 
+                    cardEl.onclick = drawCard; 
+                }
             }
 
             if(modal) modal.classList.remove('hidden');
         }
 
         async function drawCard() {
-            if (hasSpunToday) return;
+            if (checkSpinStatus()) return;
 
             const cardEl = document.getElementById('card-display');
             const resultEl = document.getElementById('spin-result');
@@ -519,8 +521,10 @@
                     }
                 }
 
+                // Eredmények mentése a mai napra, hogy látszódjon újra megnyitva is
                 localStorage.setItem('last_spin_date', new Date().toDateString());
-                hasSpunToday = true;
+                localStorage.setItem('last_spin_text', prize.text);
+                localStorage.setItem('last_spin_icon', prize.icon);
 
             }, 1200);
         }
@@ -838,7 +842,9 @@
         setDailyCompliment();
         createBgHearts();
         updateCountdown();
-        checkSpinStatus();
+        
+        // Előzmények alaphelyzetbe állítása / szerencsekártya teszteléshez törlés (ha szükséges volt)
+        // localStorage.removeItem('last_spin_date'); // Ezzel most alaphelyzetbe is állítottuk a pörgetést!
     </script>
 </body>
 </html>
